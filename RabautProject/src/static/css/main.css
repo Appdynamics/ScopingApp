@@ -1,0 +1,25 @@
+/*
+Custom CSS for...
+'Modern Business' HTML Theme by Start Bootstrap
+All Start Bootstrap themes are licensed under Apache 2.0.
+For more info and more free Bootstrap 3 HTML themes, visit http://startbootstrap.com!
+*/
+
+/* Global Styles */
+
+html, body {
+    height: 100%;
+}
+
+body {
+    padding-bottom: 20px;
+    font-family: "Didot";
+    background: #f4fcdd;
+    background: -moz-linear-gradient(left, #f4fcdd 0%, #69b111 100%);
+    background: -webkit-gradient(left top, right top, color-stop(0%, #f4fcdd), color-stop(100%, #69b111));
+    background: -webkit-linear-gradient(left, #f4fcdd 0%, #69b111 100%);
+    background: -o-linear-gradient(left, #f4fcdd 0%, #69b111 100%);
+    background: -ms-linear-gradient(left, #f4fcdd 0%, #69b111 100%);
+    background: linear-gradient(to right, #f4fcdd 0%, #69b111 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f4fcdd', endColorstr='#69b111', GradientType=1 );
+}

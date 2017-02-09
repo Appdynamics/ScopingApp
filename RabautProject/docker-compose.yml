@@ -1,0 +1,22 @@
+version: '2'
+services:
+  postgres-data:
+    image: postgres:9.5
+    #environment:
+     #- POSTGRES_DB=AppDynamicsPostgres
+     #- POSTGRES_USER=test
+     #- POSTGRES_PASSWORD=test
+    volumes:
+     - ./src/data/data:/var/lib/postgresql/data
+  ScopingApp:
+    image: 632713433352.dkr.ecr.us-west-2.amazonaws.com/scoping_app
+    command: python /ScopingApp/src/run.py
+    ports:
+     - "32773:5000"
+    links:
+     - postgres-data
+    environment:
+     - SQLALCHEMY_DATABASE_URI=postgresql://test:test@postgres-data:5432/AppDynamicsPostgres
+     - SQLALCHEMY_TRACK_MODIFICATIONS=True
+    depends_on:
+      - postgres-data
