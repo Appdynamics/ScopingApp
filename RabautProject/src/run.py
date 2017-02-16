@@ -32,14 +32,15 @@ postgresUser = 'test'
 postgresPassword = 'test'
 postgresHost = 'postgres-data'
 postgresPort = '5432'
-userLogin = ''
-#'hd':'appdynamics.com'},
+#userLogin = ''
+
 google = oauth.remote_app('google',
                           base_url='https://www.google.com/accounts/',
                           authorize_url='https://accounts.google.com/o/oauth2/auth',
                           request_token_url=None,
                           request_token_params={'scope': 'https://www.googleapis.com/auth/userinfo.email',
-                                                'response_type': 'code'},
+                                                'response_type': 'code',
+                                                'hd':'appdynamics.com'},
                           access_token_url='https://accounts.google.com/o/oauth2/token',
                           access_token_method='POST',
                           access_token_params={'grant_type': 'authorization_code'},
@@ -61,8 +62,8 @@ def index():
         res = urlopen(req)
         resRead = res.read()
         data = json.loads(resRead)
-        global userLogin
-        userLogin = data['email']
+        #global userLogin
+        #userLogin = data['email']
     except URLError, e:
         if e.code == 401:
             # Unauthorized - bad token
@@ -99,11 +100,23 @@ def get_access_token():
 def povList():
     try:
         #filter based on session access_token
-        #access_token = get_access_token()
-        #email2 = access_token['email']
-        #print userLogin
-        povs2 = povs.query.filter_by(email=userLogin).all()
+        userLogin = ''
+        access_token = session.get('access_token')
+        access_token = access_token[0]
+        headers = {'Authorization': 'OAuth '+access_token}
+        req = Request('https://www.googleapis.com/oauth2/v1/userinfo',
+                      None, headers)
+        try:
+            res = urlopen(req)
+            resRead = res.read()
+            data = json.loads(resRead)
+            userLogin = data['email']
+        except URLError, e:
+            session.pop('access_token', None)
+            return redirect(url_for('login'))
+
         #povs2 = povs.query.all()
+        povs2 = povs.query.filter_by(email=userLogin).all()
         povsList = []
         for pov in povs2:
             povItem = {
@@ -239,7 +252,7 @@ def postgresInsert():
         conn.commit()
         cursor.close()
         conn.close()
-        return jsonify(status='OK',message='products added successfully')
+        return redirect(url_for('index'))
     except (Exception, psycopg2.DatabaseError) as error:
         return jsonify(status='ERROR',message=str(error))
 

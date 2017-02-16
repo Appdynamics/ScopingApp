@@ -57,7 +57,9 @@
                       <tr ng-repeat="app in apps track by app.id">
                           <th scope="row">[[$index+1]]</th>
                           <td>[[app.name]]</td>
-                          <td ng-repeat="productname in app.products">[[productname]]</td>
+                          <td ng-repeat="productname in app.products" ng-click="showModals([[productname]])">
+                          [[productname]]
+                          </td>
                         </tr>
                     </tbody>
                 </table>

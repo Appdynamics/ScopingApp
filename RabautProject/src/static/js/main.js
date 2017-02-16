@@ -279,6 +279,7 @@ app.controller("DetailCtrl", ['$scope', '$http', '$location', 'productService', 
   console.log("DetailCtrl Controller reporting for duty.");
 
     $scope.info = {};
+    $scope.javaModal = null;
     $scope.selectedProducts = {};
     $scope.page = productService.getId();
 
@@ -332,6 +333,18 @@ app.controller("DetailCtrl", ['$scope', '$http', '$location', 'productService', 
       }, function(error) {
           console.log(error);
       });
+    }
+
+    //THIS ACTUALLY WORKS
+    $scope.showModals = function(name) {
+        $scope.javaModal = name[0]
+        console.log($scope.javaModal)
+        if ($scope.javaModal=="Java APM") {
+          $('#addApp').modal('show')
+
+        } else {
+
+        }
     }
 
     $scope.showProducts();
