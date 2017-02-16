@@ -27,7 +27,7 @@ class povs(db.Model):
   sfdc = db.Column(db.String(128), nullable=False)
   start = db.Column(db.String(128), nullable=False)
   enddate = db.Column(db.String(128), nullable=False)
-  apps = db.relationship('apps', backref="povs", cascade="all, delete-orphan")
+  apps = db.relationship('apps', backref="povs", lazy='dynamic', cascade="all, delete-orphan")
 
   def __init__(self, email, account, sfdc, start, enddate):
         self.email = email
@@ -55,11 +55,14 @@ class apps(db.Model):
   id = db.Column(db.Integer, primary_key=True)
   name = db.Column(db.String(128),nullable=False)
   povs_id = db.Column(db.Integer, db.ForeignKey('povs.id'))
-  products = db.relationship('products', secondary=appsproducts, backref=db.backref('products', lazy='dynamic'))
+  products = db.relationship('products', secondary=appsproducts, lazy='dynamic', backref=db.backref('apps', lazy='dynamic'))
 
-  def __init__(self, name, products):
+  def __init__(self, name):
         self.name = name
-        self.products = products
+
+  def add(self, apps):
+      db.session.add(apps)
+      return session_commit()
 
 class products(db.Model):
     id = db.Column(db.Integer, primary_key=True)

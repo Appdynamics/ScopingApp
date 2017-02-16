@@ -1,6 +1,6 @@
 'use strict';
 
-var app = angular.module('ScopingApp', ['ngRoute']);
+var app = angular.module('ScopingApp', ['ngRoute', 'ui.bootstrap']);
 
 
 
@@ -17,22 +17,114 @@ app.config(['$routeProvider', function ($routeProvider) {
     // Home
     .when("/", {templateUrl: "/static/partials/home.html", controller: "PageCtrl"})
     // Pages
-    .when("/povapp", {templateUrl: "/static/partials/povadd.html", controller: "PageCtrl"})
+    .when("/povapp", {templateUrl: "/static/partials/povapp.html", controller: "DetailCtrl"})
     .when("/update", {templateUrl: "/static/partials/update.html", controller: "PageCtrl"})
     .otherwise("/404", {templateUrl: "/static/partials/404.html", controller: "PageCtrl"});
 }]);
 
+
 /**
- * Controls the Blog
+ * Service to get POV/APP Details
  */
-app.controller('PageCtrl', function ($scope, $location, $http) {
+ app.service('productService', function($http) {
+
+   var currentId;
+
+   this.setId = function(id){
+     this.currentId = id;
+   };
+
+   this.getId = function() {
+     return this.currentId;
+   };
+
+
+   this.getPovs = function(povid) {
+
+    return $http({
+             method: 'POST',
+             url: '/getPov',
+             data: {
+                 id: povid
+             }
+         }).then(function(response) {
+             console.log(response.data)
+             return response.data;
+           }, function(error) {
+             console.log(error);
+             return error
+           });
+
+   };
+
+   this.getApps = function(appid) {
+
+    return $http({
+               method: 'POST',
+               url: '/getApps',
+               data: {id: appid}
+           }).then(function(response) {
+               console.log(response.data)
+               return response.data;
+             }, function(error) {
+                 console.log(error);
+                 return error
+             });
+   };
+
+ });
+
+/**
+ * Controls the Pages
+ */
+app.controller('PageCtrl', function ($scope, $location, $http, productService) {
   console.log("POV Controller reporting for duty.");
 
     $scope.info = {};
-
+    $scope.selectedProducts = {};
+    $scope.povid = null;
+    $scope.selectedPov = null;
     $scope.showAdd = true;
 
-    $scope.selectedProducts = [];
+    $scope.formats = ['dd-MMMM-yyyy', 'yyyy/MM/dd', 'dd.MM.yyyy', 'shortDate'];
+    $scope.format = $scope.formats[3];
+    $scope.altInputFormats = ['M!/d!/yyyy'];
+
+    $scope.popup1 = {
+      opened: false
+    };
+
+    $scope.dateOptions = {
+    formatYear: 'yy',
+    maxDate: new Date(2020, 5, 22),
+    minDate: new Date(2010,1,1),
+    startingDay: 1
+    };
+
+    $scope.today = function() {
+      $scope.dt = new Date();
+    };
+    $scope.today();
+
+    $scope.clear = function() {
+      $scope.dt = null;
+    };
+
+    $scope.open1 = function() {
+      $scope.popup1.opened = true;
+    };
+
+    $scope.popup1 = {
+      opened: false
+    };
+
+    $scope.open2 = function() {
+      $scope.popup2.opened = true;
+    };
+
+    $scope.popup2 = {
+      opened: false
+    };
 
     $scope.showlist = function() {
        $http({
@@ -40,11 +132,31 @@ app.controller('PageCtrl', function ($scope, $location, $http) {
            url: '/getPovs'
        }).then(function(response) {
            $scope.povs = response.data;
-           console.log('mm', $scope.povs);
+           //console.log('mm', $scope.povs);
        }, function(error) {
            console.log(error);
        });
    }
+
+   $scope.showAddPopUp = function(){
+         $scope.showAdd = true;
+         $scope.info = {};
+         console.log($scope)
+         $('#addPopUp').modal('show')
+      }
+
+   $scope.showProducts = function(){
+         $scope.products = [];
+         $http({
+           method: 'GET',
+           url: '/getProducts'
+         }).then(function(response) {
+             $scope.products = response.data;
+             //console.log('mm', $scope.products);
+         }, function(error) {
+             console.log(error);
+         });
+     }
    //In this function take out the call to show list, and on succesful add,
    //hide modal and open PovAppAdd modal
     $scope.addPov = function() {
@@ -59,6 +171,7 @@ app.controller('PageCtrl', function ($scope, $location, $http) {
                $scope.showlist();
                $('#addPopUp').modal('hide')
                $('#addApp').modal('show')
+               $scope.povid = response.data.id
                $scope.showApp = true;
                $scope.info = {}
            }, function(error) {
@@ -68,6 +181,26 @@ app.controller('PageCtrl', function ($scope, $location, $http) {
 
     $scope.addApp = function() {
 
+        //var lastpov = $scope.povs[$scope.povs.length - 1];
+        //var lastid = lastpov['id'];
+        var lastid = $scope.povid
+        $http({
+            method: 'POST',
+            url: '/addApp',
+            data: {
+                info: $scope.info,
+                id: lastid,
+                products: $scope.selectedProducts
+            }
+        }).then(function(response) {
+            console.log(response);
+            $('#addApp').modal('hide')
+            $scope.info = {}
+            $scope.selectedProducts = {}
+            //$location.path('povapp')
+        }, function(error) {
+            console.log(error);
+        });
     }
 
 
@@ -88,6 +221,14 @@ app.controller('PageCtrl', function ($scope, $location, $http) {
    						console.log(error);
    					});
    			}
+
+    $scope.editPov = function(id) {
+        $scope.info.id = id;
+        productService.setId(id);
+
+        $location.path('povapp')
+
+    }
 
 
     $scope.updatePov = function(id){
@@ -130,13 +271,28 @@ app.controller('PageCtrl', function ($scope, $location, $http) {
 						console.log(error);
 					});
 				}
+    $scope.showlist();
+    $scope.showProducts();
+});
 
-    $scope.showAddPopUp = function(){
-   				$scope.showAdd = true;
-   				$scope.info = {};
-          console.log($scope)
-   				$('#addPopUp').modal('show')
-   		 }
+app.controller("DetailCtrl", ['$scope', '$http', '$location', 'productService', function($scope, $http, $location, productService) {
+  console.log("DetailCtrl Controller reporting for duty.");
+
+    $scope.info = {};
+    $scope.selectedProducts = {};
+    $scope.page = productService.getId();
+
+    productService.getPovs($scope.page).then(function(response) {
+      $scope.povdetails = response;
+    });
+
+
+    productService.getApps($scope.page).then(function(response) {
+      $scope.apps = response;
+    });
+
+
+
 
     $scope.showProducts = function(){
           $scope.products = [];
@@ -145,38 +301,38 @@ app.controller('PageCtrl', function ($scope, $location, $http) {
             url: '/getProducts'
           }).then(function(response) {
               $scope.products = response.data;
-              console.log('mm', $scope.products);
+              //console.log('mm', $scope.products);
           }, function(error) {
               console.log(error);
           });
       }
 
+    $scope.addAppAgain = function(){
+      $('#addApp').modal('show')
+    }
 
-    $scope.showlist();
-    $scope.showProducts();
-
-});
-
-app.controller("contactForm", ['$scope', '$http', function($scope, $http) {
-    $scope.success = false;
-    $scope.error = false;
-
-    $scope.sendMessage = function( input ) {
-      input.submit = true;
+    $scope.submitApp = function() {
       $http({
           method: 'POST',
-          url: '/partials/contact.php',
-          data: input,
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-      })
-      .success( function(data) {
-        if ( data.success ) {
-          $scope.success = true;
-          $scope.input = {};
-          $scope.form.$setPristine();
-        } else {
-          $scope.error = true;
-        }
-      } );
+          url: '/addApp',
+          data: {
+              info: $scope.info,
+              id: $scope.page,
+              products: $scope.selectedProducts
+          }
+      }).then(function(response) {
+          console.log(response);
+          $('#addApp').modal('hide')
+          $scope.info = {}
+          $scope.selectedProducts = {}
+          productService.getApps($scope.page).then(function(response) {
+            $scope.apps = response;
+          });
+          //$location.path('povapp')
+      }, function(error) {
+          console.log(error);
+      });
     }
+
+    $scope.showProducts();
   }]);

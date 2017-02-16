@@ -24,6 +24,7 @@ app = Flask(__name__)
 app.secret_key = SECRET_KEY
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('SQLALCHEMY_DATABASE_URI')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = os.environ.get('SQLALCHEMY_TRACK_MODIFICATIONS')
+
 oauth = OAuth()
 
 postgresDatabase = 'AppDynamicsPostgres'
@@ -31,14 +32,14 @@ postgresUser = 'test'
 postgresPassword = 'test'
 postgresHost = 'postgres-data'
 postgresPort = '5432'
-
+userLogin = ''
+#'hd':'appdynamics.com'},
 google = oauth.remote_app('google',
                           base_url='https://www.google.com/accounts/',
                           authorize_url='https://accounts.google.com/o/oauth2/auth',
                           request_token_url=None,
                           request_token_params={'scope': 'https://www.googleapis.com/auth/userinfo.email',
-                                                'response_type': 'code',
-                                                'hd':'appdynamics.com'},
+                                                'response_type': 'code'},
                           access_token_url='https://accounts.google.com/o/oauth2/token',
                           access_token_method='POST',
                           access_token_params={'grant_type': 'authorization_code'},
@@ -58,6 +59,10 @@ def index():
                   None, headers)
     try:
         res = urlopen(req)
+        resRead = res.read()
+        data = json.loads(resRead)
+        global userLogin
+        userLogin = data['email']
     except URLError, e:
         if e.code == 401:
             # Unauthorized - bad token
@@ -94,8 +99,11 @@ def get_access_token():
 def povList():
     try:
         #filter based on session access_token
-        #povs2 = povs.query.filter_by(email='eric.johanson@appdynamics.com').all()
-        povs2 = povs.query.all()
+        #access_token = get_access_token()
+        #email2 = access_token['email']
+        #print userLogin
+        povs2 = povs.query.filter_by(email=userLogin).all()
+        #povs2 = povs.query.all()
         povsList = []
         for pov in povs2:
             povItem = {
@@ -128,6 +136,14 @@ def get_pov():
     except Exception, e:
         return jsonify(status='ERROR',message=str(e))
 
+@app.route('/getDetails', methods=['POST'])
+def get_details():
+    try:
+        povId = request.json['id']
+        pass
+    except Exception, e:
+        return jsonify(status='ERROR',message=str(e))
+
 @app.route('/add', methods=['POST'])
 def pov_add():
     try:
@@ -136,10 +152,20 @@ def pov_add():
         povAccount = povInfo['account']
         povSFDC = povInfo['sfdc']
         povStartDate = povInfo['start']
-        povEndDate = povInfo['enddate']
+        #format date strings before insert, enddate check if null
+        if 'enddate' not in povInfo:
+            povEndDate = ''
+
+        else:
+            povEndDate = povInfo['enddate']
+            povEndDate = povEndDate[:-14]
+
+        povStartDate = povStartDate[:-14]
         pov=povs(povEmail, povAccount, povSFDC, povStartDate, povEndDate)
         pov_add=pov.add(pov)
-        return jsonify(status='OK',message='inserted successfully')
+        povidreturn = pov.get_id()
+        povreturn = { 'id' : povidreturn }
+        return json.dumps(povreturn)
     except Exception, e:
         return jsonify(status='ERROR',message=str(e))
 
@@ -172,26 +198,6 @@ def pov_delete():
         #If POV.update does not return an error
     except Exception, e:
         return jsonify(status='ERROR',message=str(e))
-
-
-
-def postgresLoadData():
-    conn = psycopg2.connect(database=postgresDatabase, user=postgresUser, host=postgresHost, port=postgresPort, password=postgresPassword)
-    cursor = conn.cursor()
-    cursor.execute("DROP TABLE IF EXISTS Accounts")
-    cursor.execute("DROP TABLE IF EXISTS POV")
-    cursor.execute("DROP TABLE IF EXISTS Apps")
-    cursor.execute("DROP TABLE IF EXISTS Procucts")
-    cursor.execute("DROP TABLE IF EXISTS ProductApps")
-    cursor.execute("CREATE TABLE Accounts(Id SERIAL PRIMARY KEY, email VARCHAR(), Balance INTEGER)")
-    cursor.execute("CREATE TABLE POV(Id SERIAL PRIMARY KEY, email VARCHAR(20), SFDC VARCHAR(20), start VARCHAR(20), end VARCHAR(20))")
-    cursor.execute("CREATE TABLE Apps(Id SERIAL PRIMARY KEY, Name VARCHAR(20), Balance INTEGER)")
-    cursor.execute("CREATE TABLE Products(Id SERIAL PRIMARY KEY, Name VARCHAR(20), Balance INTEGER)")
-    cursor.execute("CREATE TABLE ProductApps(Id SERIAL PRIMARY KEY, Name VARCHAR(20), Balance INTEGER)")
-    conn.commit()
-    cursor.close()
-    conn.close()
-    pass
 
 @app.route('/insertProducts')
 def postgresInsert():
@@ -253,6 +259,54 @@ def productList():
     except Exception,e:
         return str(e)
     return json.dumps(productsList)
+
+#get apps from pov id, then get list of products from app
+@app.route('/getApps', methods=['POST', 'GET'])
+def appList():
+    try:
+
+        povId = request.json['id']
+        pov = povs.query.get(povId)
+        apps2 = pov.apps.all()
+        appsList = []
+        productList = []
+        for app in apps2:
+            products2 = app.products.all()
+            for product3 in products2:
+                productList.append(product3.name)
+
+            appItem = {
+                    'name':app.name,
+                    'products':productList,
+                    'id':str(app.id)
+                    }
+            appsList.append(appItem)
+            productList = []
+    except Exception,e:
+        return str(e)
+    return json.dumps(appsList)
+
+@app.route('/addApp', methods=['POST'])
+def addApp():
+    try:
+        povId = request.json['id']
+        pov = povs.query.get(povId)
+        appInfo = request.json['info']
+        appProducts = request.json['products']
+        appName = appInfo['appname']
+        app = apps(appName)
+        pov.apps.append(app)
+        app_add = app.add(app)
+        x = 0
+        for product in appProducts:
+            productItem = products.query.filter_by(name=product).first()
+            app.products.append(productItem)
+            db.session.commit()
+            x = x + 1
+        return jsonify(status='OK',message=str(x))
+        #return jsonify(status='OK',message='App inserted successfully')
+    except Exception, e:
+        return jsonify(status='ERROR',message=str(e))
 
 
 if __name__ == '__main__':
