@@ -23,3 +23,7 @@ body {
     background: linear-gradient(to right, #f4fcdd 0%, #69b111 100%);
     filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f4fcdd', endColorstr='#69b111', GradientType=1 );
 }
+
+.row {
+  cursor: pointer;
+}

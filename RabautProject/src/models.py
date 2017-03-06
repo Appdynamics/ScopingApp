@@ -64,6 +64,13 @@ class apps(db.Model):
       db.session.add(apps)
       return session_commit()
 
+  def update(self):
+        return session_commit()
+
+  def delete(self,apps):
+        db.session.delete(apps)
+        return session_commit()
+
 class products(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(128),nullable=False)

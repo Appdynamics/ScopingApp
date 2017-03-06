@@ -8,6 +8,12 @@ services:
      #- POSTGRES_PASSWORD=test
     volumes:
      - ./src/data/data:/var/lib/postgresql/data
+  mongo-data:
+    image: mongo:3.4
+    volumes:
+     - ./src/data/mongodata:/data/db
+    ports:
+     - "27107"
   ScopingApp:
     image: 632713433352.dkr.ecr.us-west-2.amazonaws.com/scoping_app
     command: python /ScopingApp/src/run.py

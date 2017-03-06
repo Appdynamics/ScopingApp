@@ -5,6 +5,9 @@ from urllib2 import Request, urlopen, URLError
 from sqlalchemy import create_engine, Column, Integer, String
 from flask_sqlalchemy import SQLAlchemy
 
+import pymongo
+from pymongo import MongoClient
+
 import models
 
 from models import db, povs, apps, products, appsproducts
@@ -61,7 +64,7 @@ def index():
     try:
         res = urlopen(req)
         resRead = res.read()
-        data = json.loads(resRead)
+        #data = json.loads(resRead)
         #global userLogin
         #userLogin = data['email']
     except URLError, e:
@@ -118,6 +121,7 @@ def povList():
         #povs2 = povs.query.all()
         povs2 = povs.query.filter_by(email=userLogin).all()
         povsList = []
+
         for pov in povs2:
             povItem = {
                     'email':pov.email,
@@ -149,19 +153,38 @@ def get_pov():
     except Exception, e:
         return jsonify(status='ERROR',message=str(e))
 
-@app.route('/getDetails', methods=['POST'])
-def get_details():
+@app.route('/getUser', methods=['GET'])
+def get_user():
     try:
-        povId = request.json['id']
-        pass
-    except Exception, e:
-        return jsonify(status='ERROR',message=str(e))
+        userLogin = ''
+        access_token = session.get('access_token')
+        access_token = access_token[0]
+        headers = {'Authorization': 'OAuth '+access_token}
+        req = Request('https://www.googleapis.com/oauth2/v1/userinfo',
+                      None, headers)
+        try:
+            res = urlopen(req)
+            resRead = res.read()
+            data = json.loads(resRead)
+            userLogin = data['email']
+        except URLError, e:
+            session.pop('access_token', None)
+            return redirect(url_for('login'))
+
+        povsList = []
+        povItem = { 'user':userLogin }
+        povsList.append(povItem)
+        return json.dumps(povsList) 
+    except Exception as e:
+        return jsonify('ERROR', message=str(e))
+
 
 @app.route('/add', methods=['POST'])
 def pov_add():
     try:
         povInfo = request.json['info']
-        povEmail = povInfo['email']
+        povEmail2 = request.json['email']
+        povEmail = povEmail2['info']
         povAccount = povInfo['account']
         povSFDC = povInfo['sfdc']
         povStartDate = povInfo['start']
@@ -252,7 +275,7 @@ def postgresInsert():
         conn.commit()
         cursor.close()
         conn.close()
-        return redirect(url_for('index'))
+        return jsonify(status='ERROR',message=str('Insert ok'))
     except (Exception, psycopg2.DatabaseError) as error:
         return jsonify(status='ERROR',message=str(error))
 
@@ -321,6 +344,46 @@ def addApp():
     except Exception, e:
         return jsonify(status='ERROR',message=str(e))
 
+@app.route('/updateApp' , methods=['POST'])
+def app_update():
+    #Check if the POV exists:
+    try:
+        appInfo = request.json['info']
+        app = apps.query.get(appInfo['id'])
+        app.name = appInfo['name']
+        app_update=app.update()
+        return jsonify(status='OK',message='updated successfully')
+        #If POV.update does not return an error
+    except Exception, e:
+        return jsonify(status='ERROR',message=str(e))
+
+#DELETE
+@app.route('/deleteApp' , methods=['POST'])
+def app_delete():
+    try:
+        appInfo = request.json['id']
+        app = apps.query.get(appInfo)
+        app_delete=app.delete(pov)
+        return jsonify(status='OK',message='app deleted successfully')
+        #If POV.update does not return an error
+    except Exception, e:
+        return jsonify(status='ERROR',message=str(e))
+
+@app.route('/createMongo', methods=['GET'])
+def qualifyQuestions():
+    try:
+        client = MongoClient('mongodb://mongo-data:27017/')
+        db = client.AppDynamicsMongo
+        return redirect(url_for('index'))
+    except Exception as e:
+        return jsonify(status='ERROR',message=str(e))
+
+@app.route('/adminPortal', methods=['GET', 'POST'])
+def adminPortal():
+    try:
+        pass
+    except Exception as e:
+        raise
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", debug=True, threaded=True)

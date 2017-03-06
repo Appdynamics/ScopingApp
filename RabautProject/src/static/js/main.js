@@ -1,6 +1,6 @@
 'use strict';
 
-var app = angular.module('ScopingApp', ['ngRoute', 'ui.bootstrap']);
+var app = angular.module('ScopingApp', ['ngRoute', 'ui.bootstrap', 'ngMaterial']);
 
 
 
@@ -18,6 +18,7 @@ app.config(['$routeProvider', function ($routeProvider) {
     .when("/", {templateUrl: "/static/partials/home.html", controller: "PageCtrl"})
     // Pages
     .when("/povapp", {templateUrl: "/static/partials/povapp.html", controller: "DetailCtrl"})
+    .when("/admin", {templateUrl: "/static/partials/adminPortal.html", controller: "PageCtrl"})
     .when("/update", {templateUrl: "/static/partials/update.html", controller: "PageCtrl"})
     .otherwise("/404", {templateUrl: "/static/partials/404.html", controller: "PageCtrl"});
 }]);
@@ -85,6 +86,8 @@ app.controller('PageCtrl', function ($scope, $location, $http, productService) {
     $scope.povid = null;
     $scope.selectedPov = null;
     $scope.showAdd = true;
+    $scope.email = null;
+    $scope.users = {};
 
     $scope.formats = ['dd-MMMM-yyyy', 'yyyy/MM/dd', 'dd.MM.yyyy', 'shortDate'];
     $scope.format = $scope.formats[3];
@@ -138,6 +141,22 @@ app.controller('PageCtrl', function ($scope, $location, $http, productService) {
        });
    }
 
+   $scope.showUser = function() {
+     $http({
+         method: 'GET',
+         url: '/getUser'
+     }).then(function(response) {
+         $scope.users = response.data;
+         $scope.email = {
+           'info' : $scope.users[0].user
+         }
+         //console.log('mm', $scope.povs);
+     }, function(error) {
+         console.log(error);
+     });
+
+   }
+
    $scope.showAddPopUp = function(){
          $scope.showAdd = true;
          $scope.info = {};
@@ -165,7 +184,8 @@ app.controller('PageCtrl', function ($scope, $location, $http, productService) {
                method: 'POST',
                url: '/add',
                data: {
-                   info: $scope.info
+                   info: $scope.info,
+                   email: $scope.email
                }
            }).then(function(response) {
                $scope.showlist();
@@ -197,7 +217,9 @@ app.controller('PageCtrl', function ($scope, $location, $http, productService) {
             $('#addApp').modal('hide')
             $scope.info = {}
             $scope.selectedProducts = {}
-            //$location.path('povapp')
+            $scope.editPov(lastid)
+            $('body').removeClass('modal-open');
+            $('.modal-backdrop').remove();
         }, function(error) {
             console.log(error);
         });
@@ -273,6 +295,7 @@ app.controller('PageCtrl', function ($scope, $location, $http, productService) {
 				}
     $scope.showlist();
     $scope.showProducts();
+    $scope.showUser();
 });
 
 app.controller("DetailCtrl", ['$scope', '$http', '$location', 'productService', function($scope, $http, $location, productService) {
@@ -338,11 +361,20 @@ app.controller("DetailCtrl", ['$scope', '$http', '$location', 'productService', 
     //THIS ACTUALLY WORKS
     $scope.showModals = function(name) {
         $scope.javaModal = name[0]
-        console.log($scope.javaModal)
-        if ($scope.javaModal=="Java APM") {
-          $('#addApp').modal('show')
 
-        } else {
+        if ($scope.javaModal=="Java APM") {
+
+          $('#javaModal').modal('show');
+
+        } else if($scope.javaModal=="C++ APM") {
+
+          $('#c++Modal').modal('show');
+
+        }
+          else if($scope.javaModal=="Python APM") {
+          $('#pythonModal').modal('show');
+        }
+        else {
 
         }
     }
