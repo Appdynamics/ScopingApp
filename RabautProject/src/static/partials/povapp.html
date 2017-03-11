@@ -60,7 +60,7 @@
                           <td ng-repeat="productname in app.products" ng-click="showModals([[productname]])">
                           [[productname]]
                           </td>
-                        </tr>
+                      </tr>
                     </tbody>
                 </table>
             </div>
@@ -79,7 +79,7 @@
                 <form>
                     <div class="form-group">
                         <label for="txtAppName" class="control-label">App Name:</label>
-                        <input type="text" class="form-control" ng-model="info.appname" id="txtAppName">
+                        <input type="text" class="form-control" placeholder="Enter App Name" ng-model="info.appname" id="txtAppName">
                     </div>
                     <div class="form-group"> Products: <br>
                         <label ng-repeat="product in products">
@@ -121,76 +121,6 @@
                     <div class="form-group">
                         <label for="txtJDKversion" class="control-label">JDK Version?</label>
                         <input type="text" class="form-control" ng-model="info.version" id="txtJDKversion">
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" ng-click="submitProductDetails()" class="btn btn-primary">Submit Product Details</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="pythonModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="exampleModalLabel">Add Python Details</h4>
-            </div>
-            <div class="modal-body">
-                <form>
-                    <div class="form-group">
-                        <label for="txtTierName" class="control-label">Tier Name:</label>
-                        <input type="text" class="form-control" ng-model="info.tiername" id="txtAppName">
-                    </div>
-                    <div class="form-group">
-                        <label for="txtFramework" class="control-label">What frameworks and protocols?</label>
-                        <input type="text" class="form-control" ng-model="info.tierframeworks" id="txtFrameworks">
-                    </div>
-                    <div class="form-group">
-                        <label for="txtWebServers" class="control-label">How Many Web Servers?</label>
-                        <input type="text" class="form-control" ng-model="info.webservers" id="txtWebServers">
-                    </div>
-                    <div class="form-group">
-                        <label for="txtPythonVersion" class="control-label">Python Version?</label>
-                        <input type="text" class="form-control" ng-model="info.version" id="txtPythonVersion">
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" ng-click="submitProductDetails()" class="btn btn-primary">Submit Product Details</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="c++Modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="exampleModalLabel">Add Java Details</h4>
-            </div>
-            <div class="modal-body">
-                <form>
-                    <div class="form-group">
-                        <label for="txtTierName" class="control-label">Tier Name:</label>
-                        <input type="text" class="form-control" ng-model="info.tiername" id="txtAppName">
-                    </div>
-                    <div class="form-group">
-                        <label for="txtTierWebApp" class="control-label">Is the tier a web application, standalone executable, or a packagaed component?</label>
-                        <input type="text" class="form-control" ng-model="info.tierwebapp" id="txtTierWebApp">
-                    </div>
-                    <div class="form-group">
-                        <label for="txtJVMs" class="control-label">How Many JVM's?</label>
-                        <input type="text" class="form-control" ng-model="info.jvms" id="txtJVMs">
-                    </div>
-                    <div class="form-group">
-                        <label for="txtJDKversion" class="control-label">JDK Version?</label>
-                        <input type="text" class="form-control" ng-model="info.jdk" id="txtJDKversion">
                     </div>
                 </form>
             </div>

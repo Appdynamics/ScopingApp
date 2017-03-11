@@ -19,6 +19,7 @@ app.config(['$routeProvider', function ($routeProvider) {
     // Pages
     .when("/povapp", {templateUrl: "/static/partials/povapp.html", controller: "DetailCtrl"})
     .when("/admin", {templateUrl: "/static/partials/adminPortal.html", controller: "PageCtrl"})
+    .when("/admin/javaSequence", {templateUrl: "/static/partials/javaSequence.html", controller: "PageCtrl"})
     .when("/update", {templateUrl: "/static/partials/update.html", controller: "PageCtrl"})
     .otherwise("/404", {templateUrl: "/static/partials/404.html", controller: "PageCtrl"});
 }]);
@@ -88,6 +89,8 @@ app.controller('PageCtrl', function ($scope, $location, $http, productService) {
     $scope.showAdd = true;
     $scope.email = null;
     $scope.users = {};
+
+    $scope.answers = [{id: 'answer1'}];
 
     $scope.formats = ['dd-MMMM-yyyy', 'yyyy/MM/dd', 'dd.MM.yyyy', 'shortDate'];
     $scope.format = $scope.formats[3];
@@ -176,6 +179,39 @@ app.controller('PageCtrl', function ($scope, $location, $http, productService) {
              console.log(error);
          });
      }
+
+    $scope.showJavaSequence = function() {
+       $('#javaSequence').modal('show');
+    }
+
+    $scope.addSequence = function() {
+      $http({
+          method: 'POST',
+          url: '/addSequence',
+          data: {
+              info: $scope.info,
+              answers: $scope.answers
+          }
+      }).then(function(response) {
+          $('#javaSequence').modal('hide')
+          $scope.info = {}
+          $scope.answers = [{id: 'answer1'}];
+      }, function(error) {
+          console.log(error);
+      });
+
+    }
+
+    $scope.addFields = function() {
+      var newItemNo = $scope.answers.length+1;
+      $scope.answers.push({'id':'choice'+newItemNo});
+      console.log($scope.answers)
+    }
+
+    $scope.removeFields = function() {
+      var lastItem = $scope.answers.length-1;
+      $scope.answers.splice(lastItem);
+  };
    //In this function take out the call to show list, and on succesful add,
    //hide modal and open PovAppAdd modal
     $scope.addPov = function() {
@@ -305,7 +341,7 @@ app.controller("DetailCtrl", ['$scope', '$http', '$location', 'productService', 
     $scope.javaModal = null;
     $scope.selectedProducts = {};
     $scope.page = productService.getId();
-
+    $scope.javaQuestionSequence = {};
     productService.getPovs($scope.page).then(function(response) {
       $scope.povdetails = response;
     });

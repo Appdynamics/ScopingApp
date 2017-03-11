@@ -1,0 +1,71 @@
+<div class="container">
+        <div class="header clearfix">
+            <nav>
+                <ul class="nav nav-pills pull-right">
+                    <li role="presentation" class="active"><a href="#/admin">Admin Home</a></li>
+                </ul>
+            </nav>
+            <h3 class="text-muted"> Java Sequences </h3>
+        </div>
+        <div class="section">
+          <div class="row">
+            <button class="btn btn-large btn-block btn-primary" type="button" ng-click="showJavaSequence()">Add Sequence</button>
+            <button class="btn btn-large btn-block" type="button">Edit Sequence</button>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="bs-example" data-example-id="panel-without-body-with-table">
+              <div class="panel panel-default">
+                  <div class="panel-heading">Jave Sequences</div>
+                  <table class="table table-hover table-bodered">
+                      <thead>
+                          <tr>
+                              <th>#</th>
+                              <th>Question</th>
+                              <th>Answers</th>
+                              <th>Responses</th>
+                              <th></th>
+                              <th></th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                      </tbody>
+                  </table>
+              </div>
+          </div>
+        </div>
+</div>
+
+<div class="modal fade" id="javaSequence" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="exampleModalLabel">Add App</h4>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="form-group">
+                        <label for="txtQuesion" class="control-label">Question:</label>
+                        <input type="text" class="form-control" placeholder="Which JVM's are you running?" ng-model="info.question" id="txtQuestion">
+                    </div>
+                    <div class="form-group" ng-repeat="answer in answers">
+                        <label for="txtAnswer" class="control-label">Answer:</label>
+                        <input type="text" class="form-control" placeholder="IBM JVM 1.5x" ng-model="answer.name" id="txtAnswer">
+                        <button class="remove" ng-show="$last" ng-click="removeFields()">-</button>
+                        <button class="remove" ng-show="$last" ng-click="addFields()">+</button>
+                    </div>
+                    <div class="form-group">
+                        <label for="txtResponse" class="control-label">Response:</label>
+                        <input type="text" class="form-control" placeholder="Supported!!" ng-model="info.response" id="txtResponse">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" ng-click="addSequence()" class="btn btn-primary">Add Sequence</button>
+            </div>
+        </div>
+    </div>
+</div>

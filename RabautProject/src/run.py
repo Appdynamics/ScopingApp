@@ -10,7 +10,7 @@ from pymongo import MongoClient
 
 import models
 
-from models import db, povs, apps, products, appsproducts
+from models import db, povs, apps, products, appsproducts, questions, answers, responses
 
 import psycopg2
 import os
@@ -174,7 +174,7 @@ def get_user():
         povsList = []
         povItem = { 'user':userLogin }
         povsList.append(povItem)
-        return json.dumps(povsList) 
+        return json.dumps(povsList)
     except Exception as e:
         return jsonify('ERROR', message=str(e))
 
@@ -275,7 +275,7 @@ def postgresInsert():
         conn.commit()
         cursor.close()
         conn.close()
-        return jsonify(status='ERROR',message=str('Insert ok'))
+        return jsonify(status='OK',message=str('Insert ok'))
     except (Exception, psycopg2.DatabaseError) as error:
         return jsonify(status='ERROR',message=str(error))
 
@@ -375,6 +375,35 @@ def qualifyQuestions():
         client = MongoClient('mongodb://mongo-data:27017/')
         db = client.AppDynamicsMongo
         return redirect(url_for('index'))
+    except Exception as e:
+        return jsonify(status='ERROR',message=str(e))
+
+@app.route('/addSequence', methods=['POST'])
+def addSequence():
+    try:
+        sequenceInfo = request.json['info']
+        answersInfo = request.json['answers']
+
+        questionInfo = sequenceInfo['question']
+        responseInfo = sequenceInfo['response']
+
+        productQuestion = products.query.filter_by(name='Java APM').first()
+
+        question = questions(questionInfo)
+        productQuestion.questions.append(question)
+        question_add = question.add(question)
+
+
+        for ans in answersInfo:
+            answerInfoInsert = ans['name']
+            answer = answers(answerInfoInsert)
+            question.answers.append(answer)
+            answer_add = answer.add(answer)
+            response = responses(responseInfo)
+            answer.responses.append(response)
+            response_add = response.add(response)
+
+        return jsonify(status='OK',message='Inserted Sequence successfully')
     except Exception as e:
         return jsonify(status='ERROR',message=str(e))
 

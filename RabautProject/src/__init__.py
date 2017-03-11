@@ -1,1 +1,1 @@
-from models import db, povs, apps, products, appsproducts
+from models import db, povs, apps, products, appsproducts, questions, answers, responses

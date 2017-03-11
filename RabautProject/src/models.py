@@ -74,6 +74,7 @@ class apps(db.Model):
 class products(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(128),nullable=False)
+    questions = db.relationship('questions', backref="products", lazy='dynamic', cascade="all, delete-orphan")
 
     def __init__(self, name):
           self.name = name
@@ -81,6 +82,64 @@ class products(db.Model):
     def get_id(self):
         return str(self.id)
 
+class questions(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    subject = db.Column(db.String(128),nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'))
+    answers = db.relationship('answers', backref="questions", lazy='dynamic', cascade="all, delete-orphan")
+
+    def __init__(self, subject):
+          self.subject = subject
+
+    def add(self,questions):
+        db.session.add(questions)
+        return session_commit()
+
+    def update(self):
+          return session_commit()
+
+    def delete(self,questions):
+          db.session.delete(questions)
+          return session_commit()
+
+class answers(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    answerQuestion = db.Column(db.String(128),nullable=False)
+    question_id = db.Column(db.Integer, db.ForeignKey('questions.id'))
+    responses = db.relationship('responses', backref="answers", lazy='dynamic', cascade="all, delete-orphan")
+
+    def __init__(self, answerQuestion):
+          self.answerQuestion = answerQuestion
+
+    def add(self,answers):
+        db.session.add(answers)
+        return session_commit()
+
+    def update(self):
+          return session_commit()
+
+    def delete(self,answers):
+          db.session.delete(answers)
+          return session_commit()
+
+class responses(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    responseAnswer = db.Column(db.String(128),nullable=False)
+    answers_id = db.Column(db.Integer, db.ForeignKey('answers.id'))
+
+    def __init__(self, responseAnswer):
+          self.responseAnswer = responseAnswer
+
+    def add(self,responses):
+        db.session.add(responses)
+        return session_commit()
+
+    def update(self):
+          return session_commit()
+
+    def delete(self,responses):
+          db.session.delete(responses)
+          return session_commit()
 
 
 def session_commit():

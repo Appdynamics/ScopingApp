@@ -49,29 +49,29 @@
                 <h4 class="modal-title" id="exampleModalLabel">Add POV</h4>
             </div>
             <div class="modal-body">
-                <form>
+                <form name="AddPovForm">
                     <div class="form-group">
                         <label for="txtEmail" class="control-label">Email:</label>
-                        <input type="text" class="form-control" ng-model="email.info" id="txtEmail">
+                        <input type="text" class="form-control" ng-model="email.info" ng-required="true" id="txtEmail">
                     </div>
                     <div class="form-group">
                         <label for="txtAccount" class="control-label">Account:</label>
-                        <input type="text" class="form-control" ng-model="info.account" id="txtAccount">
+                        <input type="text" class="form-control" ng-model="info.account" placeholder="Enter Account" ng-required="true" id="txtAccount">
                     </div>
                     <div class="form-group">
                         <label for="txtSfdc" class="control-label">SFDC:</label>
-                        <input type="text" class="form-control" ng-model="info.sfdc" id="txtSfdc">
+                        <input type="text" class="form-control" ng-model="info.sfdc" placeholder="Enter SFDC Link" ng-required="true" id="txtSfdc">
                     </div>
                     <div class="form-group">
                         <label for="txtStart" class="control-label">StartDate:</label>
-                        <input type="text" class="form-control" uib-datepicker-popup="[[format]]" ng-model="info.start" is-open="popup1.opened" datepicker-options="dateOptions" ng-required="true" close-text="Close" alt-input-formats="altInputFormats" />
+                        <input type="text" class="form-control" uib-datepicker-popup="[[format]]" ng-model="info.start" is-open="popup1.opened" datepicker-options="dateOptions" placeholder="Enter Start Date" ng-required="true" close-text="Close" alt-input-formats="altInputFormats" />
                         <span class="input-group-btn">
                         <button type="button" class="btn btn-default" ng-click="open1()"><i class="glyphicon glyphicon-calendar"></i></button>
                         </span>
                     </div>
                     <div class="form-group">
                         <label for="txtEndDate" class="control-label">EndDate:</label>
-                        <input type="text" class="form-control" uib-datepicker-popup="[[format]]" ng-model="info.enddate" is-open="popup2.opened" datepicker-options="dateOptions" ng-required="true" close-text="Close" alt-input-formats="altInputFormats" />
+                        <input type="text" class="form-control" uib-datepicker-popup="[[format]]" ng-model="info.enddate" is-open="popup2.opened" datepicker-options="dateOptions" placeholder="Enter Target End Date" ng-required="true" close-text="Close" alt-input-formats="altInputFormats" />
                         <span class="input-group-btn">
                         <button type="button" class="btn btn-default" ng-click="open2()"><i class="glyphicon glyphicon-calendar"></i></button>
                         </span>
@@ -80,8 +80,8 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button ng-show="showAdd" id="btnAdd" ng-click="addPov()" type="button" class="btn btn-primary">Add Pov & Continue</button>
-                <button ng-show="!showAdd" id="btnAdd" ng-click="updatePov()" type="button" class="btn btn-primary">Update</button>
+                <button ng-show="showAdd" id="btnAdd" ng-click="AddPovForm.$valid && addPov()" type="button" class="btn btn-primary">Add Pov & Continue</button>
+                <button ng-show="!showAdd" id="btnAdd" ng-click="AddPovForm.$valid && updatePov()" type="button" class="btn btn-primary">Update</button>
             </div>
         </div>
     </div>
@@ -114,11 +114,11 @@
                         <label for="txtAppName" class="control-label">App Name:</label>
                         <input type="text" class="form-control" ng-model="info.appname" id="txtAppName">
                     </div>
-                    <div class="form-group"> Products: <br>
-                        <label ng-repeat="product in products">
-                        <input type="checkbox" ng-model="selectedProducts[product.name]"> [[product.name]] </br>
-                      </input>
-                    </label>
+                    <div class="checkbox"> Products:
+                        <label class="checkbox" ng-repeat="product in products">
+                        <input type="checkbox" ng-model="selectedProducts[product.name]"> [[product.name]]
+                        </input>
+                        </label>
                     </div>
                 </form>
             </div>
