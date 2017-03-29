@@ -11,6 +11,7 @@ html, body {
     height: 100%;
 }
 
+/*
 body {
     padding-bottom: 20px;
     font-family: "Didot";
@@ -23,6 +24,22 @@ body {
     background: linear-gradient(to right, #f4fcdd 0%, #69b111 100%);
     filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f4fcdd', endColorstr='#69b111', GradientType=1 );
 }
+*/
+
+body {
+    padding-bottom: 20px;
+    font-family: "Open Sans";
+    background: #f4fcdd;
+    background-image: url("/static/img/image151.png");
+    background-size:     cover;                      /* <------ */
+    background-repeat:   no-repeat;
+    background-position: center center;
+}
+
+.grid {
+  width: 1170px;
+  height: 200px;
+}
 
 .row {
   cursor: pointer;
@@ -30,6 +47,19 @@ body {
 
 .remove{
     background: #C76868;
+    color: #FFF;
+    font-weight: bold;
+    font-size: 21px;
+    border: 0;
+    cursor: pointer;
+    display: inline-block;
+    padding: 4px 9px;
+    vertical-align: top;
+    line-height: 100%;
+}
+
+.add{
+    background: #5fcd4c;
     color: #FFF;
     font-weight: bold;
     font-size: 21px;

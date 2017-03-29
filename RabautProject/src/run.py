@@ -10,7 +10,7 @@ from pymongo import MongoClient
 
 import models
 
-from models import db, povs, apps, products, appsproducts, questions, answers, responses
+from models import db, povs, apps, products, appsproducts, questions, answers, responses, answersresponses, customresponses, customanswersresponses
 
 import psycopg2
 import os
@@ -129,6 +129,7 @@ def povList():
                     'sfdc':pov.sfdc,
                     'start':pov.start,
                     'enddate':pov.enddate,
+                    'targetenddate':pov.targetenddate,
                     'id':pov.get_id()
                     }
             povsList.append(povItem)
@@ -147,6 +148,7 @@ def get_pov():
                 'sfdc':pov.sfdc,
                 'start':pov.start,
                 'enddate':pov.enddate,
+                'targetenddate':pov.targetenddate,
                 'id':pov.get_id()
                 }
         return json.dumps(povItem)
@@ -188,6 +190,7 @@ def pov_add():
         povAccount = povInfo['account']
         povSFDC = povInfo['sfdc']
         povStartDate = povInfo['start']
+        povTargetEndDate = povInfo['targetenddate']
         #format date strings before insert, enddate check if null
         if 'enddate' not in povInfo:
             povEndDate = ''
@@ -197,7 +200,8 @@ def pov_add():
             povEndDate = povEndDate[:-14]
 
         povStartDate = povStartDate[:-14]
-        pov=povs(povEmail, povAccount, povSFDC, povStartDate, povEndDate)
+        povTargetEndDate = povTargetEndDate[:-14]
+        pov=povs(povEmail, povAccount, povSFDC, povStartDate, povEndDate, povTargetEndDate)
         pov_add=pov.add(pov)
         povidreturn = pov.get_id()
         povreturn = { 'id' : povidreturn }
@@ -212,11 +216,15 @@ def pov_update():
     try:
         povInfo = request.json['info']
         pov = povs.query.get(povInfo['id'])
+        fixStartDate = povInfo['start']
+        fixEndDate = povInfo['enddate']
+        fixTargetEndDate = povInfo['targetenddate']
         pov.email = povInfo['email']
         pov.account = povInfo['account']
         pov.sfdc = povInfo['sfdc']
-        pov.start = povInfo['start']
-        pov.enddate = povInfo['enddate']
+        pov.start = fixStartDate[:-14]
+        pov.enddate = fixEndDate[:-14]
+        pov.targetenddate = fixTargetEndDate[:-14]
         pov_update=pov.update()
         return jsonify(status='OK',message='updated successfully')
         #If POV.update does not return an error
@@ -259,6 +267,11 @@ def postgresInsert():
         add_values10 = ['Synthetic RUM']
         add_values11 = ['Database Monitoring']
 
+        add_values12 = ['Supported!']
+        add_values13 = ['Not Supported!']
+        add_values14 = ['4.4 Release']
+        add_values15 = ['Other']
+
         add_person = ("INSERT INTO products (name) VALUES (%s)")
         cursor.execute(add_person, add_values)
         cursor.execute(add_person, add_values2)
@@ -271,6 +284,12 @@ def postgresInsert():
         cursor.execute(add_person, add_values9)
         cursor.execute(add_person, add_values10)
         cursor.execute(add_person, add_values11)
+
+        add_person2 = ("INSERT INTO responses (subject) VALUES (%s)")
+        cursor.execute(add_person2, add_values12)
+        cursor.execute(add_person2, add_values13)
+        cursor.execute(add_person2, add_values14)
+        cursor.execute(add_person2, add_values15)
 
         conn.commit()
         cursor.close()
@@ -312,7 +331,7 @@ def appList():
                 productList.append(product3.name)
 
             appItem = {
-                    'name':app.name,
+                    'appname':app.name,
                     'products':productList,
                     'id':str(app.id)
                     }
@@ -321,6 +340,25 @@ def appList():
     except Exception,e:
         return str(e)
     return json.dumps(appsList)
+
+@app.route('/api/getApp', methods=['POST'])
+def getApp():
+    try:
+        appId = request.json['id']
+        appy = apps.query.get(appId)
+        products2 = appy.products.all()
+        productList = []
+        for product3 in products2:
+            productList.append(product3.name)
+
+        appItem = {
+                'appname':appy.name,
+                'products':productList,
+                'id':str(appy.id)
+                }
+        return json.dumps(appItem)
+    except Exception, e:
+        return jsonify(status='ERROR',message=str(e))
 
 @app.route('/addApp', methods=['POST'])
 def addApp():
@@ -344,26 +382,49 @@ def addApp():
     except Exception, e:
         return jsonify(status='ERROR',message=str(e))
 
+#need to make sure no memory leak if completed sequence then updated app
 @app.route('/updateApp' , methods=['POST'])
 def app_update():
     #Check if the POV exists:
     try:
         appInfo = request.json['info']
-        app = apps.query.get(appInfo['id'])
-        app.name = appInfo['name']
-        app_update=app.update()
+        appProducts = request.json['products']
+
+        appName = appInfo['appname']
+        appz = apps.query.get(appInfo['id'])
+
+        #appProducts = appProductCheck['products']
+
+        appz.name = appName
+        appz.products = []
+        db.session.commit()
+
+        #for product in productList:
+            #appz.products.remove(product)
+            #db.session.commit()
+
+        for product in appProducts:
+            productItem = products.query.filter_by(name=product).first()
+            appz.products.append(productItem)
+            db.session.commit()
+
+        #will also need to get the products
+        app_update=appz.update()
         return jsonify(status='OK',message='updated successfully')
-        #If POV.update does not return an error
+
     except Exception, e:
         return jsonify(status='ERROR',message=str(e))
 
-#DELETE
+#DELETE App also need to delete the data in mongo associated with the app
 @app.route('/deleteApp' , methods=['POST'])
 def app_delete():
     try:
+        client = MongoClient('mongodb://mongo-data:27017/')
+        db = client.AppDynamicsMongo
         appInfo = request.json['id']
-        app = apps.query.get(appInfo)
-        app_delete=app.delete(pov)
+        results = db.responsedata.delete_many({'appid' : appInfo})
+        appy = apps.query.get(appInfo)
+        app_delete=appy.delete(appy)
         return jsonify(status='OK',message='app deleted successfully')
         #If POV.update does not return an error
     except Exception, e:
@@ -383,36 +444,207 @@ def addSequence():
     try:
         sequenceInfo = request.json['info']
         answersInfo = request.json['answers']
+        productInfo = request.json['language']
 
         questionInfo = sequenceInfo['question']
-        responseInfo = sequenceInfo['response']
 
-        productQuestion = products.query.filter_by(name='Java APM').first()
+
+        productQuestion = products.query.filter_by(name=productInfo).first()
 
         question = questions(questionInfo)
         productQuestion.questions.append(question)
         question_add = question.add(question)
 
-
+        #if response does't exist insert into custom response
         for ans in answersInfo:
             answerInfoInsert = ans['name']
+            responseInfo = ans['subject']
             answer = answers(answerInfoInsert)
             question.answers.append(answer)
             answer_add = answer.add(answer)
-            response = responses(responseInfo)
-            answer.responses.append(response)
-            response_add = response.add(response)
+            response = responses.query.filter_by(subject=responseInfo).first()
+            if not response:
+                customResponseOne = customresponses(responseInfo)
+                answer.customresponses.append(customResponseOne)
+                customAdd = customResponseOne.add(customResponseOne)
+                db.session.commit()
+            else:
+                answer.responses.append(response)
+                db.session.commit()
+
 
         return jsonify(status='OK',message='Inserted Sequence successfully')
     except Exception as e:
         return jsonify(status='ERROR',message=str(e))
+
+#if they change the question then this won't work
+@app.route('/updateSequence', methods=['POST'])
+def updateSequence():
+    try:
+        sequenceInfo = request.json['info']
+        answersInfo = request.json['answers']
+        productInfo = request.json['language']
+
+        questionInfo = sequenceInfo['question']
+
+        productQuestion = products.query.filter_by(name=productInfo).first()
+        question = questions.query.filter_by(subject=questionInfo).first()
+
+        question.answers.responses = []
+        question.answers = []
+
+        for ans in answersInfo:
+            answerInfoInsert = ans['name']
+            responseInfo = ans['subject']
+            answer = answers(answerInfoInsert)
+            question.answers.append(answer)
+            answer_add = answer.add(answer)
+            response = responses.query.filter_by(subject=responseInfo).first()
+            answer.responses.append(response)
+            db.session.commit()
+
+        return jsonify(status='OK',message='Update Sequence successfully')
+    except Exception as e:
+        return jsonify(status='ERROR',message=str(e))
+
+@app.route('/deleteSequence', methods=['POST'])
+def deleteSequence():
+    try:
+        sequenceInfo = request.json['info']
+        questionInfo = request.json['info']
+        question = questions.query.filter_by(subject=questionInfo).first()
+        question_delete = question.delete(question)
+        return jsonify(status='OK',message='Question deleted successfully')
+    except Exception as e:
+        return jsonify(status='ERROR',message=str(e))
+
+@app.route('/api/getSequences', methods=['POST'])
+def getSequences():
+    try:
+        #this will take a variable and filter by that
+        filterbylanguage = request.json['language']
+        languageSequence = products.query.filter_by(name=filterbylanguage).first()
+        languageQuestion = questions.query.filter_by(product_id=languageSequence.get_id()).all()
+        sequenceList = []
+        for question in languageQuestion:
+            answerList = []
+            responseList = []
+            answerQuestions = question.answers.all()
+            for answer in answerQuestions:
+                responseToAnswer = answer.responses.all()
+                if(responseToAnswer):
+                    answerList.append(answer.answerQuestion)
+                    for singleResponse in responseToAnswer:
+                        responseList.append(singleResponse.subject)
+                else:
+                    answerList.append(answer.answerQuestion)
+                    responseToAnswer = answer.customresponses.all()
+                    for singleResponse in responseToAnswer:
+                        responseList.append(singleResponse.subject)
+
+            sequenceItem = {
+            'question' : question.subject,
+            'answers' : answerList,
+            'responses' : responseList
+            }
+            answerList = []
+            sequenceList.append(sequenceItem)
+    except Exception as e:
+        return jsonify(status='ERROR',message=str(e))
+    return json.dumps(sequenceList)
+
+@app.route('/api/getResponses', methods=['POST','GET'])
+def getResponses():
+    try:
+        #filter based on session access_token
+        #povs2 = povs.query.filter_by(email='eric.johanson@appdynamics.com').all()
+        responses2 = responses.query.all()
+        responsesList = []
+        for response in responses2:
+            responseItem = {
+                    'name':response.subject,
+                    'id':response.get_id()
+                    }
+            responsesList.append(responseItem)
+    except Exception,e:
+        return str(e)
+    return json.dumps(responsesList)
+
+@app.route('/api/addResponses', methods=['POST'])
+def addResponses():
+    try:
+        client = MongoClient('mongodb://mongo-data:27017/')
+        db = client.AppDynamicsMongo
+        appId = request.json['id']
+        productName = request.json['language']
+        userResponses = request.json['responses']
+        UserData = db.responsedata
+        UserData.insert_one(
+        {
+        "appid": appId,
+        "productName": productName,
+        "userResponses": userResponses
+        })
+        return jsonify(status='OK',message='Inserted Responses successfully')
+    except Exception as e:
+        return jsonify(status='OK',message=str(e))
+
+@app.route('/api/getUserResponses', methods=['POST'])
+def getUserResponses():
+    try:
+        client = MongoClient('mongodb://mongo-data:27017/')
+        countten = 0
+        db = client.AppDynamicsMongo
+        appId = request.json['id']
+        responsesList = []
+        arrayofsupport = []
+        support = []
+        totalQuestions = []
+        for doc in db.responsedata.find({'appid': appId}):
+            getAnswerResponses = doc['userResponses']
+            language = doc['productName']
+            languageSequence = products.query.filter_by(name=language).first()
+            languageQuestion = questions.query.filter_by(product_id=languageSequence.get_id()).all()
+            for ans in getAnswerResponses:
+                countten = countten + 1
+                for singleAnswer in ans:
+                    check = answers.query.filter_by(answerQuestion=singleAnswer).first()
+                    if(check):
+                        checkResponse = check.responses.all()
+                        if(checkResponse):
+                            for singleResponse in checkResponse:
+                                support.append(singleResponse.subject)
+                        else:
+                            checkResponse = check.customresponses.all()
+                            for singleResponse in checkResponse:
+                                support.append(singleResponse.subject)
+
+
+                arrayofsupport.append(support)
+                support = []
+
+            for question in languageQuestion:
+                totalQuestions.append(question.subject)
+
+
+
+
+            responsesList.append({'appid' : doc['appid'], 'productName' : doc['productName'], 'userResponses' : doc['userResponses'], 'userFeedback' : arrayofsupport, 'languageQuestions' : totalQuestions})
+            support = []
+            arrayofsupport = []
+            totalQuestions = []
+            countten = 0
+
+    except Exception as e:
+        return jsonify(status='OK',message=str(e))
+    return json.dumps(responsesList)
 
 @app.route('/adminPortal', methods=['GET', 'POST'])
 def adminPortal():
     try:
         pass
     except Exception as e:
-        raise
+        return jsonify(status='ERROR',message=str(e))
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", debug=True, threaded=True)

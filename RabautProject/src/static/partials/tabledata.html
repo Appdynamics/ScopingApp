@@ -1,0 +1,19 @@
+<table class="table table-hover table-bodered">
+    <thead>
+        <tr>
+          <th></th>
+          <th></th>
+          <th></th>
+          <th></th>
+        </tr>
+    </thead>
+    <tbody ng-repeat="details in responsedetails track by $index">
+      <tr>
+        <th ng-repeat="question in details.languageQuestions">[[question]]</th>
+        <td ng-repeat="support in details.userResponses">[[support]]</td>
+      </tr>
+      <tr>
+        <td ng-repeat="feedback in details.userFeedback track by $index">[[feedback]]</td>
+      </tr>
+    </tbody>
+</table>

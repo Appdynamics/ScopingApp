@@ -1,19 +1,14 @@
 <div class="container">
         <div class="header">
             <nav>
-              <ul class="nav nav-pills pull-right">                
+              <ul class="nav nav-pills pull-right">
               </ul>
             </nav>
             <h3 class="text-muted"> Admin Sequences </h3>
           </div>
         <div class="section">
-          <div class="row">
-            <a href="#/admin/javaSequence" class="btn btn-primary btn-lg btn-block">Java Sequences</a>
-            <a href="#/admin/javaSequence" class="btn btn-success btn-lg btn-block">C++ Sequences</a>
-            <a href="#/admin/javaSequence" class="btn btn-info btn-lg btn-block">.Net Sequences</a>
-            <a href="#/admin/javaSequence" class="btn btn-warning btn-lg btn-block">Python Sequences</a>
-            <a href="#/admin/javaSequence" class="btn btn-danger btn-lg btn-block">EUM Sequences</a>
-            <a href="#/admin/javaSequence" class="btn btn-default btn-lg btn-block">Other Languages</a>
+          <div class="list-group">            
+            <button class="list-group-item list-group-item-success" ng-repeat="product in products" ng-click="adminRoute(product.name)">[[product.name]]</button>
           </div>
         </div>
 </div>

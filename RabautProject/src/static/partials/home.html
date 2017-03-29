@@ -19,6 +19,7 @@
                             <th>Account</th>
                             <th>SFDC</th>
                             <th>Start Date</th>
+                            <th>Target End Date</th>
                             <th>End Date</th>
                             <th></th>
                             <th></th>
@@ -26,13 +27,14 @@
                     </thead>
                     <tbody>
                       <tr ng-repeat="pov in povs track by $index">
-                          <th scope="row">[[$index+1]]</th>
+                          <th scope="row" ng-click="editPov(pov.id)">[[$index+1]]</th>
                           <td>[[pov.email]]</td>
                           <td>[[pov.account]]</td>
                           <td>[[pov.sfdc]]</td>
                           <td>[[pov.start]]</td>
+                          <td>[[pov.targetenddate]]</td>
                           <td>[[pov.enddate]]</td>
-                            <td><span style="cursor:pointer;" ng-click="editPov(pov.id)" class="glyphicon glyphicon-pencil" aria-hidden="true"></span></td>
+                            <td><span style="cursor:pointer;" ng-click="editMachine(pov.id)" class="glyphicon glyphicon-pencil" aria-hidden="true"></span></td>
                             <td><span style="cursor:pointer;color:#e43309;" ng-click="confirmDelete(pov.id)" class="glyphicon glyphicon-remove" aria-hidden="true"></span></td>
                         </tr>
                     </tbody>
@@ -74,6 +76,13 @@
                         <input type="text" class="form-control" uib-datepicker-popup="[[format]]" ng-model="info.enddate" is-open="popup2.opened" datepicker-options="dateOptions" placeholder="Enter Target End Date" ng-required="true" close-text="Close" alt-input-formats="altInputFormats" />
                         <span class="input-group-btn">
                         <button type="button" class="btn btn-default" ng-click="open2()"><i class="glyphicon glyphicon-calendar"></i></button>
+                        </span>
+                    </div>
+                    <div class="form-group">
+                        <label for="txtEndDate" class="control-label">Target End Date:</label>
+                        <input type="text" class="form-control" uib-datepicker-popup="[[format]]" ng-model="info.targetenddate" is-open="popup3.opened" datepicker-options="dateOptions" placeholder="Enter Target End Date" ng-required="true" close-text="Close" alt-input-formats="altInputFormats" />
+                        <span class="input-group-btn">
+                        <button type="button" class="btn btn-default" ng-click="open3()"><i class="glyphicon glyphicon-calendar"></i></button>
                         </span>
                     </div>
                 </form>

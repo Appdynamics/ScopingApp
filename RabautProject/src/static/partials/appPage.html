@@ -1,0 +1,78 @@
+<div class="container">
+        <div class="header clearfix">
+            <nav>
+                <ul class="nav nav-pills pull-right">
+                </ul>
+            </nav>
+            <h3 class="text-muted"><a href="#/app">App Home</a></h3>
+        </div>
+
+        <div class="bs-example" data-example-id="panel-without-body-with-table">
+            <div class="panel panel-default">
+                <div class="panel-heading">POV DETAILS</div>
+                <table class="table table-striped table-bordered">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Email</th>
+                            <th>Account</th>
+                            <th>SFDC</th>
+                            <th>Start Date</th>
+                            <th>Target End Date</th>
+                            <th>End Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                          <th scope="row">[[$index+1]]</th>
+                          <td>[[povdetails.email]]</td>
+                          <td>[[povdetails.account]]</td>
+                          <td>[[povdetails.sfdc]]</td>
+                          <td>[[povdetails.start]]</td>
+                          <td>[[povdetails.targetenddate]]</td>
+                          <td>[[povdetails.enddate]]</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="bs-example" data-example-id="panel-without-body-with-table">
+            <div class="panel panel-default">
+                <div class="panel-heading">App Details</div>
+                <table class="table table-hover table-bodered">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Products</th>
+                            <th></th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                          <th scope="row">[[$index+1]]</th>
+                          <td>[[appdetails.appname]]</td>
+                          <td ng-repeat="productname in appdetails.products">
+                          [[productname]]
+                          </td>
+                      </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="list-group">
+          <button class="list-group-item list-group-item-danger" ng-repeat="productname in appdetails.products" ng-click="startSequence(productname)">
+            Click to Start [[productname]] Sequence
+          </button>
+        </div>
+
+        <div class="row" ng-show="showData" ng-repeat="group in gridOptionsArray|limitTo:1 track by $index">
+          <div class="col-sm-12">
+            <div ui-grid="group" class="grid"></div>
+          </div>
+        </div>      
+
+</div>

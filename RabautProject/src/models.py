@@ -20,6 +20,16 @@ appsproducts = db.Table('appsproducts',
         db.Column('product_id', db.Integer, db.ForeignKey('products.id'))
         )
 
+answersresponses = db.Table('answersresponses',
+        db.Column('answer_id', db.Integer, db.ForeignKey('answers.id')),
+        db.Column('response_id', db.Integer, db.ForeignKey('responses.id'))
+        )
+
+customanswersresponses = db.Table('customanswersresponses',
+        db.Column('answer_id', db.Integer, db.ForeignKey('answers.id')),
+        db.Column('customresponse_id', db.Integer, db.ForeignKey('customresponses.id'))
+        )
+
 class povs(db.Model):
   id = db.Column(db.Integer, primary_key=True)
   email = db.Column(db.String(128), nullable=False)
@@ -27,14 +37,16 @@ class povs(db.Model):
   sfdc = db.Column(db.String(128), nullable=False)
   start = db.Column(db.String(128), nullable=False)
   enddate = db.Column(db.String(128), nullable=False)
+  targetenddate = db.Column(db.String(128), nullable=False)
   apps = db.relationship('apps', backref="povs", lazy='dynamic', cascade="all, delete-orphan")
 
-  def __init__(self, email, account, sfdc, start, enddate):
+  def __init__(self, email, account, sfdc, start, enddate, targetenddate):
         self.email = email
         self.account = account
         self.sfdc = sfdc
         self.start = start
         self.enddate = enddate
+        self.targetenddate = targetenddate
 
 
   def add(self,povs):
@@ -95,6 +107,9 @@ class questions(db.Model):
         db.session.add(questions)
         return session_commit()
 
+    def get_id(self):
+        return str(self.id)
+
     def update(self):
           return session_commit()
 
@@ -106,7 +121,8 @@ class answers(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     answerQuestion = db.Column(db.String(128),nullable=False)
     question_id = db.Column(db.Integer, db.ForeignKey('questions.id'))
-    responses = db.relationship('responses', backref="answers", lazy='dynamic', cascade="all, delete-orphan")
+    responses = db.relationship('responses', secondary=answersresponses, backref="answers", lazy='dynamic')
+    customresponses = db.relationship('customresponses', secondary=customanswersresponses, backref="answers", lazy='dynamic')
 
     def __init__(self, answerQuestion):
           self.answerQuestion = answerQuestion
@@ -114,6 +130,9 @@ class answers(db.Model):
     def add(self,answers):
         db.session.add(answers)
         return session_commit()
+
+    def get_id(self):
+        return str(self.id)
 
     def update(self):
           return session_commit()
@@ -124,21 +143,44 @@ class answers(db.Model):
 
 class responses(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    responseAnswer = db.Column(db.String(128),nullable=False)
-    answers_id = db.Column(db.Integer, db.ForeignKey('answers.id'))
+    subject = db.Column(db.String(128),nullable=False)
 
-    def __init__(self, responseAnswer):
-          self.responseAnswer = responseAnswer
+    def __init__(self, subject):
+          self.subject = subject
 
     def add(self,responses):
         db.session.add(responses)
         return session_commit()
+
+    def get_id(self):
+        return str(self.id)
 
     def update(self):
           return session_commit()
 
     def delete(self,responses):
           db.session.delete(responses)
+          return session_commit()
+
+class customresponses(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    subject = db.Column(db.String(128),nullable=False)
+
+    def __init__(self, subject):
+          self.subject = subject
+
+    def add(self,customresponses):
+        db.session.add(customresponses)
+        return session_commit()
+
+    def get_id(self):
+        return str(self.id)
+
+    def update(self):
+          return session_commit()
+
+    def delete(self,responses):
+          db.session.delete(customresponses)
           return session_commit()
 
 

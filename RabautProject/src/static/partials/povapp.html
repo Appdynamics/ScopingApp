@@ -19,9 +19,8 @@
                             <th>Account</th>
                             <th>SFDC</th>
                             <th>Start Date</th>
+                            <th>Target End Date</th>
                             <th>End Date</th>
-                            <th></th>
-                            <th></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -31,9 +30,8 @@
                           <td>[[povdetails.account]]</td>
                           <td>[[povdetails.sfdc]]</td>
                           <td>[[povdetails.start]]</td>
+                          <td>[[povdetails.targetenddate]]</td>
                           <td>[[povdetails.enddate]]</td>
-                          <td><span style="cursor:pointer;" ng-click="editPov(pov.id)" class="glyphicon glyphicon-pencil" aria-hidden="true"></span></td>
-                          <td><span style="cursor:pointer;color:#e43309;" ng-click="confirmDelete(pov.id)" class="glyphicon glyphicon-remove" aria-hidden="true"></span></td>
                         </tr>
                     </tbody>
                 </table>
@@ -55,11 +53,13 @@
                     </thead>
                     <tbody>
                       <tr ng-repeat="app in apps track by app.id">
-                          <th scope="row">[[$index+1]]</th>
-                          <td>[[app.name]]</td>
-                          <td ng-repeat="productname in app.products" ng-click="showModals([[productname]])">
+                          <th scope="row" ng-click="showAppPage(app.id)">[[$index+1]]</th>
+                          <td>[[app.appname]]</td>
+                          <td ng-repeat="productname in app.products">
                           [[productname]]
                           </td>
+                          <td><span style="cursor:pointer;" ng-click="editApp(app.id)" class="glyphicon glyphicon-pencil" aria-hidden="true"></span></td>
+                          <td><span style="cursor:pointer;color:#e43309;" ng-click="confirmDelete(app.id)" class="glyphicon glyphicon-remove" aria-hidden="true"></span></td>
                       </tr>
                     </tbody>
                 </table>
@@ -79,55 +79,35 @@
                 <form>
                     <div class="form-group">
                         <label for="txtAppName" class="control-label">App Name:</label>
-                        <input type="text" class="form-control" placeholder="Enter App Name" ng-model="info.appname" id="txtAppName">
+                        <input type="text" class="form-control" ng-model="info.appname" id="txtAppName">
                     </div>
-                    <div class="form-group"> Products: <br>
-                        <label ng-repeat="product in products">
+                    <div class="checkbox"> Products:
+                        <label class="checkbox" ng-repeat="product in products">
                         <input type="checkbox" ng-model="selectedProducts[product.name]"> [[product.name]]
-                      </input>
-                    </label>
+                        </input>
+                        </label>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" ng-click="submitApp()" class="btn btn-primary">Add App &amp; Continue</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal" ng-click="fixModel()">Close</button>
+                <button type="button" ng-show="showApp"ng-click="submitApp()" class="btn btn-primary">Submit App</button>
+                <button type="button" ng-show="!showApp"ng-click="updateApp()" class="btn btn-primary">Update App</button>
             </div>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="javaModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="exampleModalLabel">Add Java Details</h4>
-            </div>
-            <div class="modal-body">
-                <form>
-                    <div class="form-group">
-                        <label for="txtTierName" class="control-label">Tier Name:</label>
-                        <input type="text" class="form-control" ng-model="info.tiername" id="txtAppName">
-                    </div>
-                    <div class="form-group">
-                        <label for="txtTierWebApp" class="control-label">Is the tier a web application, standalone executable, or a packagaed component?</label>
-                        <input type="text" class="form-control" ng-model="info.tierwebapp" id="txtTierWebApp">
-                    </div>
-                    <div class="form-group">
-                        <label for="txtJVMs" class="control-label">How Many JVM's?</label>
-                        <input type="text" class="form-control" ng-model="info.jvms" id="txtJVMs">
-                    </div>
-                    <div class="form-group">
-                        <label for="txtJDKversion" class="control-label">JDK Version?</label>
-                        <input type="text" class="form-control" ng-model="info.version" id="txtJDKversion">
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" ng-click="submitProductDetails()" class="btn btn-primary">Submit Product Details</button>
-            </div>
-        </div>
-    </div>
+<div id="deleteConfirm" class="modal fade bs-example-modal-md in" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel">
+		<div class="modal-dialog modal-lg">
+			<div class="modal-content">
+				<div class="modal-header"> <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+					<h4 class="modal-title" id="myLargeModalLabel">You are about to delete this entry. Do you want to proceed ?</h4> </div>
+
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					<button type="button" ng-click="deleteApp()" class="btn btn-primary">Delete</button>
+				</div>
+			</div>
+		</div>
 </div>
