@@ -20,6 +20,7 @@ RUN pip install flask-migrate
 RUN pip install flask-restful
 RUN pip install alembic
 RUN pip install pymongo
+RUN pip install bson
 
 RUN mkdir /ScopingApp
 

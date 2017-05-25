@@ -27,7 +27,7 @@
                     </thead>
                     <tbody>
                       <tr ng-repeat="pov in povs track by $index">
-                          <th scope="row" ng-click="editPov(pov.id)">[[$index+1]]</th>
+                          <th scope="row" ng-click="changePage(pov.id)"><span style="cursor:pointer;" class="glyphicon glyphicon-search" aria-hidden="true"></span></th>
                           <td>[[pov.email]]</td>
                           <td>[[pov.account]]</td>
                           <td>[[pov.sfdc]]</td>
@@ -51,46 +51,51 @@
                 <h4 class="modal-title" id="exampleModalLabel">Add POV</h4>
             </div>
             <div class="modal-body">
-                <form name="AddPovForm">
+                <form name="AddPovForm" validate>
                     <div class="form-group">
                         <label for="txtEmail" class="control-label">Email:</label>
-                        <input type="text" class="form-control" ng-model="email.info" ng-required="true" id="txtEmail">
+                        <input type="text" name="email" class="form-control" ng-model="email.info" id="txtEmail" required="">
+                        <span style="color : red;" ng-show="AddPovForm.email.$error.required">You must give an email</span>
                     </div>
                     <div class="form-group">
                         <label for="txtAccount" class="control-label">Account:</label>
-                        <input type="text" class="form-control" ng-model="info.account" placeholder="Enter Account" ng-required="true" id="txtAccount">
+                        <input type="text" class="form-control" name="Account" ng-model="info.account" placeholder="Enter Account" required="" id="txtAccount">
+                        <span style="color : red;" ng-show="AddPovForm.Account.$error.required">You must give an account</span>
                     </div>
                     <div class="form-group">
                         <label for="txtSfdc" class="control-label">SFDC:</label>
-                        <input type="text" class="form-control" ng-model="info.sfdc" placeholder="Enter SFDC Link" ng-required="true" id="txtSfdc">
+                        <input type="text" class="form-control" name="SFDC" ng-model="info.sfdc" placeholder="Enter SFDC Link"  required="" id="txtSfdc">
+                        <span style="color : red;" ng-show="AddPovForm.SFDC.$error.required">You must give an SFDC link</span>
                     </div>
                     <div class="form-group">
                         <label for="txtStart" class="control-label">StartDate:</label>
-                        <input type="text" class="form-control" uib-datepicker-popup="[[format]]" ng-model="info.start" is-open="popup1.opened" datepicker-options="dateOptions" placeholder="Enter Start Date" ng-required="true" close-text="Close" alt-input-formats="altInputFormats" />
+                        <input type="text" class="form-control" name="startDate" uib-datepicker-popup="[[format]]" ng-model="info.start" required="" is-open="popup1.opened" datepicker-options="dateOptions" placeholder="Enter Start Date" close-text="Close" alt-input-formats="altInputFormats" />
                         <span class="input-group-btn">
                         <button type="button" class="btn btn-default" ng-click="open1()"><i class="glyphicon glyphicon-calendar"></i></button>
                         </span>
+                        <span style="color : red;" ng-show="AddPovForm.startDate.$error.required">You must give a start date</span>
                     </div>
                     <div class="form-group">
                         <label for="txtEndDate" class="control-label">EndDate:</label>
-                        <input type="text" class="form-control" uib-datepicker-popup="[[format]]" ng-model="info.enddate" is-open="popup2.opened" datepicker-options="dateOptions" placeholder="Enter Target End Date" ng-required="true" close-text="Close" alt-input-formats="altInputFormats" />
+                        <input type="text" class="form-control" name="enddate" uib-datepicker-popup="[[format]]" ng-model="info.enddate" is-open="popup2.opened" datepicker-options="dateOptions" placeholder="Enter Target End Date" close-text="Close" alt-input-formats="altInputFormats" />
                         <span class="input-group-btn">
                         <button type="button" class="btn btn-default" ng-click="open2()"><i class="glyphicon glyphicon-calendar"></i></button>
                         </span>
                     </div>
                     <div class="form-group">
                         <label for="txtEndDate" class="control-label">Target End Date:</label>
-                        <input type="text" class="form-control" uib-datepicker-popup="[[format]]" ng-model="info.targetenddate" is-open="popup3.opened" datepicker-options="dateOptions" placeholder="Enter Target End Date" ng-required="true" close-text="Close" alt-input-formats="altInputFormats" />
+                        <input type="text" class="form-control" name="targetenddate" uib-datepicker-popup="[[format]]" ng-model="info.targetenddate" required="" is-open="popup3.opened" datepicker-options="dateOptions" placeholder="Enter Target End Date" close-text="Close" alt-input-formats="altInputFormats" />
                         <span class="input-group-btn">
                         <button type="button" class="btn btn-default" ng-click="open3()"><i class="glyphicon glyphicon-calendar"></i></button>
                         </span>
+                        <span style="color : red;" ng-show="AddPovForm.targetenddate.$error.required">You must give a target end date</span>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button ng-show="showAdd" id="btnAdd" ng-click="AddPovForm.$valid && addPov()" type="button" class="btn btn-primary">Add Pov & Continue</button>
-                <button ng-show="!showAdd" id="btnAdd" ng-click="AddPovForm.$valid && updatePov()" type="button" class="btn btn-primary">Update</button>
+                <button ng-show="showAdd" id="btnAdd" ng-disabled="AddPovForm.$invalid" ng-click="addPov()" type="button" class="btn btn-primary">Add Pov & Continue</button>
+                <button ng-show="!showAdd" id="btnAdd" ng-disabled="AddPovForm.$invalid" ng-click="updatePov()" type="button" class="btn btn-primary">Update</button>
             </div>
         </div>
     </div>

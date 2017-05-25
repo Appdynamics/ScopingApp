@@ -10,11 +10,12 @@
                     </div>
                     <div class="form-group">
                         <label for="txtTierName" class="control-label">Answer:</label>
-                        <multiselect name="answerSelect" id="answerSelect"
+                        <multiselect name="answerSelect" ng-show="isOtherValue(selectedResponse)" id="answerSelect"
                         ng-model="selectedResponse"
                         options="answer for answer in sequence.answers"
                         data-multiple="true">
                         </multiselect>
+                        <input type="text" ng-show="!showOtherText" class="form-control" placeholder="Item not in list, type here" ng-model="selectedResponseOther" id="txtAnswer">
                     </div>
                 </form>
             </div>

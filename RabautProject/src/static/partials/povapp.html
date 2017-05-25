@@ -53,7 +53,7 @@
                     </thead>
                     <tbody>
                       <tr ng-repeat="app in apps track by app.id">
-                          <th scope="row" ng-click="showAppPage(app.id)">[[$index+1]]</th>
+                          <th scope="row" ng-click="showAppPage(app.id)"><span style="cursor:pointer;" class="glyphicon glyphicon-search" aria-hidden="true"></span></th>
                           <td>[[app.appname]]</td>
                           <td ng-repeat="productname in app.products">
                           [[productname]]

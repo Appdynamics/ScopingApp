@@ -4,6 +4,7 @@ from urllib2 import Request, urlopen, URLError
 
 from sqlalchemy import create_engine, Column, Integer, String
 from flask_sqlalchemy import SQLAlchemy
+from bson import ObjectId
 
 import pymongo
 from pymongo import MongoClient
@@ -118,8 +119,13 @@ def povList():
             session.pop('access_token', None)
             return redirect(url_for('login'))
 
-        #povs2 = povs.query.all()
-        povs2 = povs.query.filter_by(email=userLogin).all()
+
+        if(userLogin == 'trabaut@appdynamics.com' or userLogin == 'dan.kowalski@appdynamics.com' or userLogin == 'frank.lamprea@appdynamics.com' or userLogin == 'steve.jenner@appdynamics.com'):
+            povs2 = povs.query.all()
+
+        else:
+            povs2 = povs.query.filter_by(email=userLogin).all()
+
         povsList = []
 
         for pov in povs2:
@@ -264,13 +270,18 @@ def postgresInsert():
         add_values7 = ['NodeJS APM']
         add_values8 = ['Browser RUM']
         add_values9 = ['Mobile RUM']
-        add_values10 = ['Synthetic RUM']
+        add_values10 = ['Synthetics']
         add_values11 = ['Database Monitoring']
 
         add_values12 = ['Supported!']
         add_values13 = ['Not Supported!']
         add_values14 = ['4.4 Release']
         add_values15 = ['Other']
+        add_values16 = ['Terminate']
+        add_values17 = ['Follow Up']
+        add_values18 = ['Low Risk']
+        add_values19 = ['Medium Risk']
+        add_values20 = ['High Risk']
 
         add_person = ("INSERT INTO products (name) VALUES (%s)")
         cursor.execute(add_person, add_values)
@@ -290,6 +301,12 @@ def postgresInsert():
         cursor.execute(add_person2, add_values13)
         cursor.execute(add_person2, add_values14)
         cursor.execute(add_person2, add_values15)
+        cursor.execute(add_person2, add_values16)
+        cursor.execute(add_person2, add_values17)
+        cursor.execute(add_person2, add_values18)
+        cursor.execute(add_person2, add_values19)
+        cursor.execute(add_person2, add_values20)
+
 
         conn.commit()
         cursor.close()
@@ -344,16 +361,26 @@ def appList():
 @app.route('/api/getApp', methods=['POST'])
 def getApp():
     try:
+        client = MongoClient('mongodb://mongo-data:27017/')
+        db = client.AppDynamicsMongo
         appId = request.json['id']
         appy = apps.query.get(appId)
         products2 = appy.products.all()
         productList = []
+        notesInfo = ""
         for product3 in products2:
             productList.append(product3.name)
+
+        for doc in db.notesdata.find({'appid': appId}):
+            if(doc):
+                notesInfo = doc['NotesInfo']
+            else:
+                notesInfo = []
 
         appItem = {
                 'appname':appy.name,
                 'products':productList,
+                'notes': notesInfo,
                 'id':str(appy.id)
                 }
         return json.dumps(appItem)
@@ -377,7 +404,9 @@ def addApp():
             app.products.append(productItem)
             db.session.commit()
             x = x + 1
-        return jsonify(status='OK',message=str(x))
+
+        appidlist = { 'appid' : str(app.id)}
+        return json.dumps(appidlist)
         #return jsonify(status='OK',message='App inserted successfully')
     except Exception, e:
         return jsonify(status='ERROR',message=str(e))
@@ -423,6 +452,7 @@ def app_delete():
         db = client.AppDynamicsMongo
         appInfo = request.json['id']
         results = db.responsedata.delete_many({'appid' : appInfo})
+        results2 = db.notesdata.delete_many({'appid' : appInfo})
         appy = apps.query.get(appInfo)
         app_delete=appy.delete(appy)
         return jsonify(status='OK',message='app deleted successfully')
@@ -477,31 +507,137 @@ def addSequence():
     except Exception as e:
         return jsonify(status='ERROR',message=str(e))
 
+@app.route('/addLogicSequence', methods=['POST'])
+def addLogicSequence():
+    try:
+        client = MongoClient('mongodb://mongo-data:27017/')
+        db = client.AppDynamicsMongo
+        answers = []
+        responses = []
+        parent = []
+        child = []
+        followUpArray = []
+        setChild = False
+        parentId = ''
+        key = ''
+
+        sequenceInfo = request.json['info']
+        answersInfo = request.json['answers']
+        productInfo = request.json['language']
+        questionInfo = sequenceInfo['question']
+
+        if request.json['parent'] == '':
+            parent = []
+        else:
+            setChild = True
+            parentId = request.json['parent']
+            key = request.json['key']
+            parent.append(parentId)
+
+
+        for ans in answersInfo:
+            answerInfoInsert = ans['name']
+            responseInfo = ans['subject']
+            answers.append(answerInfoInsert)
+            responses.append(responseInfo)
+            if(responseInfo == 'Follow Up'):
+                followUpArray.append(answerInfoInsert)
+
+
+
+        LogicData = db.logicsequencedata
+        returnid = LogicData.insert_one(
+        {
+        "question": questionInfo,
+        "language": productInfo,
+        "key": key,
+        "answers": answers,
+        "responses": responses,
+        "parent": parent,
+        "child": child
+        })
+
+        #if there is a parent then we need to set the parents child
+        if setChild == True:
+            parentToObject = ObjectId(parentId)
+            newChildarray = []
+            doc = db.logicsequencedata.find_one({'_id': parentToObject})
+            newChildarray = doc["child"]
+            newChildarray.append(str(returnid.inserted_id))
+            db.logicsequencedata.update_one(
+            {"_id": parentToObject},
+            {"$set": {"child" : newChildarray}}
+            )
+
+
+
+        returnItem = {
+        'answerstofollow': followUpArray,
+        'parentid': str(returnid.inserted_id)
+        }
+
+        return json.dumps(returnItem)
+    except Exception as e:
+        return jsonify(status='ERROR',message=str(e))
+
+@app.route('/api/getLogicSequences', methods=['GET'])
+def getLogicSequences():
+    try:
+        #this will take a variable and filter by that
+        client = MongoClient('mongodb://mongo-data:27017/')
+        db = client.AppDynamicsMongo
+        filterbylanguage = request.args.get('language')
+        sequenceList = []
+        for doc in db.logicsequencedata.find({'language' : filterbylanguage}):
+            answerList = []
+            responseList = []
+            answerQuestions = doc['answers']
+            responseQuestions = doc['responses']
+            for answer in answerQuestions:
+                answerList.append(answer)
+
+            for response in responseQuestions:
+                responseList.append(response)
+
+
+            sequenceItem = {
+            'question' : doc['question'],
+            'key' : doc['key'],
+            'answers' : answerList,
+            'responses' : responseList
+            }
+            sequenceList.append(sequenceItem)
+    except Exception as e:
+        return jsonify(status='ERROR',message=str(e))
+    return json.dumps(sequenceList)
+
 #if they change the question then this won't work
 @app.route('/updateSequence', methods=['POST'])
 def updateSequence():
     try:
+        client = MongoClient('mongodb://mongo-data:27017/')
+        db = client.AppDynamicsMongo
         sequenceInfo = request.json['info']
         answersInfo = request.json['answers']
         productInfo = request.json['language']
 
         questionInfo = sequenceInfo['question']
 
-        productQuestion = products.query.filter_by(name=productInfo).first()
-        question = questions.query.filter_by(subject=questionInfo).first()
-
-        question.answers.responses = []
-        question.answers = []
+        answers = []
+        responses = []
 
         for ans in answersInfo:
             answerInfoInsert = ans['name']
             responseInfo = ans['subject']
-            answer = answers(answerInfoInsert)
-            question.answers.append(answer)
-            answer_add = answer.add(answer)
-            response = responses.query.filter_by(subject=responseInfo).first()
-            answer.responses.append(response)
-            db.session.commit()
+            answers.append(answerInfoInsert)
+            responses.append(responseInfo)
+
+
+        result = db.logicsequencedata.find_one({"language" : productInfo, "question" : questionInfo})
+
+        if(result['key'] != ''):
+            resul2 = db.logicsequencedata.update_one({"language" : productInfo, "question" : questionInfo},
+            {"$set": {"answers" : answers, "responses" : responses}})
 
         return jsonify(status='OK',message='Update Sequence successfully')
     except Exception as e:
@@ -510,11 +646,26 @@ def updateSequence():
 @app.route('/deleteSequence', methods=['POST'])
 def deleteSequence():
     try:
-        sequenceInfo = request.json['info']
+        client = MongoClient('mongodb://mongo-data:27017/')
+        db = client.AppDynamicsMongo
+        languageInfo = request.json['language']
         questionInfo = request.json['info']
-        question = questions.query.filter_by(subject=questionInfo).first()
-        question_delete = question.delete(question)
-        return jsonify(status='OK',message='Question deleted successfully')
+        resultList = []
+
+        result = db.logicsequencedata.find_one({"language" : languageInfo, "question" : questionInfo})
+        if(result['parent'] == []):
+            for child in result['child']:
+                stringToObject = ObjectId(child)
+                resultDelete = db.logicsequencedata.delete_one({"_id" : stringToObject})
+            parentDelete = db.logicsequencedata.delete_one({"_id" : result['_id']})
+        else:
+            parent = result['parent']
+            for child in parent['child']:
+                stringToObject = ObjectId(child)
+                resultDelete = db.logicsequencedata.delete_one({"_id" : stringToObject})
+
+        #return jsonify(status='OK',message='Question deleted successfully')
+        return json.dumps(resultList)
     except Exception as e:
         return jsonify(status='ERROR',message=str(e))
 
@@ -596,6 +747,55 @@ def getUserResponses():
         countten = 0
         db = client.AppDynamicsMongo
         appId = request.json['id']
+        responseList = []
+        arrayofsupport = []
+        support = []
+        totalQuestions = []
+        for doc in db.responsedata.find({'appid': appId}):
+            responses = doc['userResponses']
+            language = doc['productName']
+            for ans in responses:
+                for singleAnswer in ans:
+                    for doc2 in db.logicsequencedata.find({'language' : language}):
+                        count = 0
+                        checkAnswers = doc2['answers']
+                        feedback = doc2['responses']
+                        questionCheck = doc2['question']
+                        for check in checkAnswers:
+                            if(check == singleAnswer):
+                                sup = feedback[count]
+                                support.append(sup)
+                                count = 0
+                                if questionCheck not in totalQuestions:
+                                    totalQuestions.append(doc2['question'])
+
+                                break
+                            else:
+                                count = count + 1
+
+
+
+
+                arrayofsupport.append(support)
+                support = []
+
+
+            responseList.append({'appid' : doc['appid'], 'productName' : doc['productName'], 'userResponses': doc['userResponses'], 'userFeedback' : arrayofsupport, 'languageQuestions' : totalQuestions})
+            arrayofsupport = []
+            support = []
+            totalQuestions = []
+
+    except Exception as e:
+        return jsonify(status='OK',message=str(e))
+    return json.dumps(responseList)
+
+@app.route('/old/api/getUserResponses', methods=['POST'])
+def oldgetUserResponses():
+    try:
+        client = MongoClient('mongodb://mongo-data:27017/')
+        countten = 0
+        db = client.AppDynamicsMongo
+        appId = request.json['id']
         responsesList = []
         arrayofsupport = []
         support = []
@@ -639,12 +839,22 @@ def getUserResponses():
         return jsonify(status='OK',message=str(e))
     return json.dumps(responsesList)
 
-@app.route('/adminPortal', methods=['GET', 'POST'])
-def adminPortal():
+@app.route('/saveNotes', methods=['POST'])
+def saveNotes():
     try:
-        pass
+        client = MongoClient('mongodb://mongo-data:27017/')
+        db = client.AppDynamicsMongo
+        appId = request.json['id']
+        notesInfo = request.json['info']
+        NotesData = db.notesdata
+        NotesData.insert_one(
+        {
+        "appid": appId,
+        "NotesInfo": notesInfo
+        })
+        return jsonify(status='OK',message='Inserted Notes successfully')
     except Exception as e:
-        return jsonify(status='ERROR',message=str(e))
+        return jsonify(status='OK',message=str(e))
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", debug=True, threaded=True)

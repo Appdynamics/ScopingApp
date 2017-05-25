@@ -4,7 +4,7 @@
                 <ul class="nav nav-pills pull-right">
                 </ul>
             </nav>
-            <h3 class="text-muted"><a href="#/app">App Home</a></h3>
+            <h3 class="text-muted"><a href="javascript:history.back()">App Home</a></h3>
         </div>
 
         <div class="bs-example" data-example-id="panel-without-body-with-table">
@@ -63,16 +63,27 @@
             </div>
         </div>
 
-        <div class="list-group">
-          <button class="list-group-item list-group-item-danger" ng-repeat="productname in appdetails.products" ng-click="startSequence(productname)">
-            Click to Start [[productname]] Sequence
-          </button>
+        <div class="row">
+          <div class="col-md-6">
+            <div class="list-group">
+              <button class="list-group-item list-group-item-danger" ng-repeat="productname in appdetails.products" ng-click="startSequence(productname)">
+                Click to Start [[productname]] Sequence
+              </button>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <textarea
+             ng-model="appdetails.notes"
+             placeholder="Enter App Notes">
+           </textarea>
+           <button type="button" class="btn btn-success" ng-click="saveNotes()">Save</button>
+          </div>
         </div>
 
         <div class="row" ng-show="showData" ng-repeat="group in gridOptionsArray|limitTo:1 track by $index">
           <div class="col-sm-12">
-            <div ui-grid="group" class="grid"></div>
+            <div ui-grid="group" ui-grid-edit class="grid"></div>
           </div>
-        </div>      
+        </div>
 
 </div>

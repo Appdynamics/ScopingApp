@@ -15,7 +15,7 @@ services:
     ports:
      - "27107"
   ScopingApp:
-    image: 632713433352.dkr.ecr.us-west-2.amazonaws.com/scoping_app
+    image: 632713433352.dkr.ecr.us-west-2.amazonaws.com/scoping_app:latest
     command: python /ScopingApp/src/run.py
     ports:
      - "32773:5000"

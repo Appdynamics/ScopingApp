@@ -164,7 +164,7 @@ class responses(db.Model):
 
 class customresponses(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    subject = db.Column(db.String(128),nullable=False)
+    subject = db.Column(db.String(),nullable=False)
 
     def __init__(self, subject):
           self.subject = subject

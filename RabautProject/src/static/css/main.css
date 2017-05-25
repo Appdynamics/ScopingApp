@@ -36,6 +36,11 @@ body {
     background-position: center center;
 }
 
+textarea {
+  width: 550px;
+  height: 165px;
+}
+
 .grid {
   width: 1170px;
   height: 200px;

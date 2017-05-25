@@ -9,15 +9,15 @@
         </div>
         <div class="section">
           <div class="row">
-            <button class="btn btn-large btn-block btn-primary" type="button" ng-click="showJavaSequence()">Add Sequence</button>
-            <button class="btn btn-large btn-block" type="button">Edit Sequence</button>
+            <button class="btn btn-large btn-block btn-primary" type="button" ng-click="showJavaSequence()">Add Generic Sequence</button>
+            <button class="btn btn-large btn-block btn-success" type="button" ng-click="showLogicSequence()">Add Logic Sequence</button>
           </div>
         </div>
 
         <div class="section">
           <div class="bs-example" data-example-id="panel-without-body-with-table">
               <div class="panel panel-default">
-                  <div class="panel-heading">Currently In Use</div>
+                  <div class="panel-heading">Currently In Use Generic Sequences</div>
                   <table class="table table-hover table-bodered">
                       <thead>
                           <tr>
@@ -45,7 +45,39 @@
                   </table>
               </div>
           </div>
+      </div>
+      <div class="section">
+        <div class="bs-example" data-example-id="panel-without-body-with-table">
+            <div class="panel panel-default">
+                <div class="panel-heading">Currently In Use Logic Sequence</div>
+                <table class="table table-hover table-bodered">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Question</th>
+                            <th>Answers</th>
+                            <th>Responses</th>
+                            <th></th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                      <tr ng-repeat="sequence in javaSequences track by $index">
+                          <th ng-click="editSequence(sequence.question, sequence.answers, sequence.responses)" scope="row">[[$index+1]]</th>
+                          <td>[[sequence.question]]</td>
+                          <td ng-repeat="answerName in sequence.answers">
+                          [[answerName]]
+                          </td>
+                          <td ng-repeat="responseName in sequence.responses|limitTo:1">
+                          [[responseName]]
+                          </td>
+                          <td><span style="cursor:pointer;color:#e43309;" ng-click="confirmDeleteSequence(sequence.question)" class="glyphicon glyphicon-remove" aria-hidden="true"></span></td>
+                      </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
+    </div>
 </div>
 
 <div class="modal fade" id="javaSequence" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel">
@@ -80,9 +112,10 @@
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" ng-show="showUpdateSequence" ng-click="addSequence()" class="btn btn-primary">Add Sequence</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal" ng-click="fixSequenceModal()">Close</button>
+                <button type="button" ng-show="showAddSequence" ng-click="addSequence()" class="btn btn-primary">Add Sequence</button>
                 <button type="button" ng-show="!showUpdateSequence" ng-click="updateSequence()" class="btn btn-primary">Update Sequence</button>
+                <button type="button" ng-show="showContinue" ng-click="followUp()" class="btn btn-primary">Continue</button>
             </div>
         </div>
     </div>
