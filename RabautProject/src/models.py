@@ -76,6 +76,9 @@ class apps(db.Model):
       db.session.add(apps)
       return session_commit()
 
+  def get_id(self):
+      return str(self.id)
+
   def update(self):
         return session_commit()
 

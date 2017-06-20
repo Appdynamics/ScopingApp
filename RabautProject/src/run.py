@@ -120,7 +120,7 @@ def povList():
             return redirect(url_for('login'))
 
 
-        if(userLogin == 'trabaut@appdynamics.com' or userLogin == 'dan.kowalski@appdynamics.com' or userLogin == 'frank.lamprea@appdynamics.com' or userLogin == 'steve.jenner@appdynamics.com'):
+        if(userLogin == 'trabaut@appdynamics.com' or userLogin == 'dan.kowalski@appdynamics.com' or userLogin == 'frank.lamprea@appdynamics.com' or userLogin == 'steve.jenner@appdynamics.com' or userLogin == 'eric.johanson@appdynamics.com'):
             povs2 = povs.query.all()
 
         else:
@@ -140,6 +140,7 @@ def povList():
                     }
             povsList.append(povItem)
     except Exception,e:
+        db.session.rollback()
         return str(e)
     return json.dumps(povsList)
 
@@ -159,6 +160,7 @@ def get_pov():
                 }
         return json.dumps(povItem)
     except Exception, e:
+        db.session.rollback()
         return jsonify(status='ERROR',message=str(e))
 
 @app.route('/getUser', methods=['GET'])
@@ -213,6 +215,7 @@ def pov_add():
         povreturn = { 'id' : povidreturn }
         return json.dumps(povreturn)
     except Exception, e:
+        db.session.rollback()
         return jsonify(status='ERROR',message=str(e))
 
 #UPDATE
@@ -235,6 +238,7 @@ def pov_update():
         return jsonify(status='OK',message='updated successfully')
         #If POV.update does not return an error
     except Exception, e:
+        db.session.rollback()
         return jsonify(status='ERROR',message=str(e))
 
 #DELETE
@@ -242,11 +246,20 @@ def pov_update():
 def pov_delete():
     try:
         povInfo = request.json['id']
-        pov = povs.query.get(povInfo)
+        pov1 = povs.query.get(povInfo)
+        for app in pov1.apps:
+            appInfo = app.get_id()
+
+            results = db.responsedata.delete_many({'appid' : appInfo})
+            results2 = db.notesdata.delete_many({'appid' : appInfo})
+            appy = apps.query.get(appInfo)
+            app_delete=appy.delete(appy)
+
         pov_delete=pov.delete(pov)
         return jsonify(status='OK',message='deleted successfully')
         #If POV.update does not return an error
     except Exception, e:
+        db.session.rollback()
         return jsonify(status='ERROR',message=str(e))
 
 @app.route('/insertProducts')
@@ -329,6 +342,7 @@ def productList():
                     }
             productsList.append(productItem)
     except Exception,e:
+        db.session.rollback()
         return str(e)
     return json.dumps(productsList)
 
@@ -355,6 +369,7 @@ def appList():
             appsList.append(appItem)
             productList = []
     except Exception,e:
+        db.session.rollback()
         return str(e)
     return json.dumps(appsList)
 
@@ -409,6 +424,7 @@ def addApp():
         return json.dumps(appidlist)
         #return jsonify(status='OK',message='App inserted successfully')
     except Exception, e:
+        db.session.rollback()
         return jsonify(status='ERROR',message=str(e))
 
 #need to make sure no memory leak if completed sequence then updated app
@@ -659,13 +675,15 @@ def deleteSequence():
                 resultDelete = db.logicsequencedata.delete_one({"_id" : stringToObject})
             parentDelete = db.logicsequencedata.delete_one({"_id" : result['_id']})
         else:
-            parent = result['parent']
-            for child in parent['child']:
+            parentCheck = result['parent'][0]
+            parentObject = ObjectId(parentCheck)
+            parent2 = db.logicsequencedata.find_one({"_id" : parentObject})
+            for child in parent2['child']:
                 stringToObject = ObjectId(child)
                 resultDelete = db.logicsequencedata.delete_one({"_id" : stringToObject})
+            parentDelete = db.logicsequencedata.delete_one({"_id" : parent2['_id']})
 
-        #return jsonify(status='OK',message='Question deleted successfully')
-        return json.dumps(resultList)
+        return jsonify(status='OK',message='Question deleted successfully')
     except Exception as e:
         return jsonify(status='ERROR',message=str(e))
 
@@ -729,12 +747,14 @@ def addResponses():
         appId = request.json['id']
         productName = request.json['language']
         userResponses = request.json['responses']
+        questions = request.json['questions']
         UserData = db.responsedata
         UserData.insert_one(
         {
         "appid": appId,
         "productName": productName,
-        "userResponses": userResponses
+        "userResponses": userResponses,
+        "questions": questions
         })
         return jsonify(status='OK',message='Inserted Responses successfully')
     except Exception as e:
@@ -744,7 +764,6 @@ def addResponses():
 def getUserResponses():
     try:
         client = MongoClient('mongodb://mongo-data:27017/')
-        countten = 0
         db = client.AppDynamicsMongo
         appId = request.json['id']
         responseList = []
@@ -754,6 +773,7 @@ def getUserResponses():
         for doc in db.responsedata.find({'appid': appId}):
             responses = doc['userResponses']
             language = doc['productName']
+            totalQuestions = doc['questions']
             for ans in responses:
                 for singleAnswer in ans:
                     for doc2 in db.logicsequencedata.find({'language' : language}):
@@ -764,12 +784,10 @@ def getUserResponses():
                         for check in checkAnswers:
                             if(check == singleAnswer):
                                 sup = feedback[count]
+                                if(sup == 'Follow Up' or sup == 'Terminate'):
+                                    sup = "N/A"
                                 support.append(sup)
                                 count = 0
-                                if questionCheck not in totalQuestions:
-                                    totalQuestions.append(doc2['question'])
-
-                                break
                             else:
                                 count = count + 1
 

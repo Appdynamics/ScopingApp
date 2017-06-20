@@ -4,7 +4,7 @@
                 <ul class="nav nav-pills pull-right">
                 </ul>
             </nav>
-            <h3 class="text-muted"><a href="javascript:history.back()">App Home</a></h3>
+            <h3 class="text-muted"><a ng-click="getAppPage()">App Home</a></h3>
         </div>
 
         <div class="bs-example" data-example-id="panel-without-body-with-table">
@@ -81,8 +81,11 @@
         </div>
 
         <div class="row" ng-show="showData" ng-repeat="group in gridOptionsArray|limitTo:1 track by $index">
-          <div class="col-sm-12">
+          <div class="col-sm-8">
             <div ui-grid="group" ui-grid-edit class="grid"></div>
+          </div>
+          <div class = "col-sm-4">
+            <!--<button type="button" class="btn btn-danger" ng-click="clearData()">Clear Data</button>-->
           </div>
         </div>
 

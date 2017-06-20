@@ -76,14 +76,15 @@
                 <h4 class="modal-title" id="exampleModalLabel">Add App</h4>
             </div>
             <div class="modal-body">
-                <form>
+                <form name="AddAppForm" validate>
                     <div class="form-group">
                         <label for="txtAppName" class="control-label">App Name:</label>
-                        <input type="text" class="form-control" ng-model="info.appname" id="txtAppName">
+                        <input type="text" class="form-control" ng-model="info.appname" name="appname" id="txtAppName" required="">
+                        <span style="color : red;" ng-show="AddAppForm.appname.$error.required">You must give an app name</span>
                     </div>
                     <div class="checkbox"> Products:
                         <label class="checkbox" ng-repeat="product in products">
-                        <input type="checkbox" ng-model="selectedProducts[product.name]"> [[product.name]]
+                        <input type="checkbox" name="product2" ng-model="selectedProducts[product.name]"> [[product.name]]
                         </input>
                         </label>
                     </div>
@@ -91,8 +92,8 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal" ng-click="fixModel()">Close</button>
-                <button type="button" ng-show="showApp"ng-click="submitApp()" class="btn btn-primary">Submit App</button>
-                <button type="button" ng-show="!showApp"ng-click="updateApp()" class="btn btn-primary">Update App</button>
+                <button type="button" ng-disabled="AddAppForm.$invalid" ng-show="showApp"ng-click="submitApp()" class="btn btn-primary">Submit App</button>
+                <button type="button" ng-disabled="AddAppForm.$invalid" ng-show="!showApp"ng-click="updateApp()" class="btn btn-primary">Update App</button>
             </div>
         </div>
     </div>

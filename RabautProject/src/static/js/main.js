@@ -482,7 +482,7 @@ app.controller('PageCtrl', function ($scope, $location, $http, $uibModal, $route
 
       //console.log($scope.questionSet)
       //console.log($scope.key)
-
+      //rare issue where sometimes first follow up question is being forgotten
       if($scope.questionSet.length != 0)
       {
         window.alert("Your Next Sequence is " + $scope.questionSet[0])
@@ -501,6 +501,7 @@ app.controller('PageCtrl', function ($scope, $location, $http, $uibModal, $route
         }, function() {
           productService.popQuestions();
           $scope.followUpQuestions();
+          $scope.refreshSequences();
 
           });
       }
@@ -529,6 +530,7 @@ app.controller('PageCtrl', function ($scope, $location, $http, $uibModal, $route
       }).then(function(response) {
           $scope.info = {}
           $scope.answers = [{id: 'answer1'}];
+          $scope.refreshSequences();
           //$('.modal-backdrop').remove();
       }, function(error) {
           console.log(error);
@@ -734,8 +736,6 @@ app.controller('PageCtrl', function ($scope, $location, $http, $uibModal, $route
 
     }
 
-    $scope.appPageDetails
-
 
     $scope.updatePov = function(id){
 
@@ -800,6 +800,7 @@ app.controller("DetailCtrl", ['$scope', '$http', '$location', '$uibModal', '$rou
     $scope.selectedResponse = '';
     $scope.selectedResponseOther = [];
     $scope.recordedResponses = [];
+    $scope.recordedQuestions = [];
     $scope.userresponses = {};
     $scope.arrayofproducts = {};
     $scope.responsedetails = {};
@@ -886,7 +887,7 @@ app.controller("DetailCtrl", ['$scope', '$http', '$location', '$uibModal', '$rou
                 $scope.singleTableData.userFeedback = $scope.responsedetails[i].userFeedback[x]
 
                 //console.log($scope.singleTableData.userFeedback)
-                console.log($scope.singleTableData.userResponses)
+                //console.log($scope.singleTableData.userResponses)
                 //there is an error occuring here when userResponses length is undefined
                 if(angular.isDefined($scope.singleTableData.userResponses)){
                   for( var t =0; t < $scope.singleTableData.userResponses.length; ++t )
@@ -939,6 +940,12 @@ app.controller("DetailCtrl", ['$scope', '$http', '$location', '$uibModal', '$rou
       }
     }
 
+    $scope.getAppPage = function () {
+      $scope.appvariable = productService.getId()
+      $location.path('app/'+$scope.appvariable)
+
+    }
+
     //on next question, need to check and see if recorded response has a follow up
     //question, if it does go there, otherwise
     $scope.refresh = function()    {
@@ -955,11 +962,13 @@ app.controller("DetailCtrl", ['$scope', '$http', '$location', '$uibModal', '$rou
             if($scope.keys[0] == $scope.currentSequence[i].key){
               console.log($scope.currentSequence[i].key)
               //here i need to check and see if there are any more parent questions left
+              productService.popKeys();
+              $scope.keyEndCheck = productService.getKeys()
               for(var p = i + 1; p < $scope.currentSequence.length; ++p){
                 if($scope.currentSequence[p].key == ''){
                     break;
                 }
-                else if(p > $scope.currentSequence.length - 2) {
+                else if(p > $scope.currentSequence.length - 2 && $scope.keyEndCheck.length == 0) {
                   $scope.showNext = false;
                 }
                 else{
@@ -970,7 +979,7 @@ app.controller("DetailCtrl", ['$scope', '$http', '$location', '$uibModal', '$rou
               $scope.sequence.answers = $scope.currentSequence[i].answers
               $scope.showOtherText = $scope.isOtherValue($scope.selectedResponse)
               productService.setCount(i)
-              //productService.popKeys();
+
               break;
             }
             else if ($scope.keys.length == 0){
@@ -1013,6 +1022,13 @@ app.controller("DetailCtrl", ['$scope', '$http', '$location', '$uibModal', '$rou
                   $scope.sequence.answers = $scope.currentSequence[x].answers
                   $scope.showOtherText = $scope.isOtherValue($scope.selectedResponse)
                   break;
+                }
+                else if( x > $scope.currentSequence.length - 2){
+                  console.log('last question')
+                  $scope.showNext = false;
+                }
+                else{
+
                 }
               }
               break;
@@ -1200,6 +1216,7 @@ app.controller("DetailCtrl", ['$scope', '$http', '$location', '$uibModal', '$rou
           $scope.javaSequenceUser = response;
           productService.setCurrentSequence($scope.javaSequenceUser)
           productService.resetCount();
+
           $scope.refresh()
 
           var modalInstance = $uibModal.open({
@@ -1232,14 +1249,15 @@ app.controller("DetailCtrl", ['$scope', '$http', '$location', '$uibModal', '$rou
         productService.setKeys($scope.selectedResponse)
       }
       else {
-        productService.popKeys();
+        //productService.popKeys();
       }
 
       //console.log(currentCount);
       //console.log($scope.checkKeys)
       //console.log(countCheck);
       //console.log($scope.selectedResponse);
-      //console.log($scope.sequence)
+      console.log($scope.sequence)
+
 
 
       if(countCheck == currentCount)
@@ -1253,7 +1271,18 @@ app.controller("DetailCtrl", ['$scope', '$http', '$location', '$uibModal', '$rou
         {
           $scope.copyArray = $scope.selectedResponseOther.split()
           var item = angular.copy($scope.copyArray)
+          if(angular.isDefined($scope.sequence.question)){
+            var question = angular.copy($scope.sequence.question)
+            $scope.recordedQuestions.push(question)
+          }
+          else {
+            var question = angular.copy($scope.sequence[0].question)
+            $scope.recordedQuestions.push(question)
+          }
+
+
           $scope.recordedResponses.push(item)
+
           console.log($scope.recordedResponses)
           var checkIfFinished = productService.getCount();
 
@@ -1269,7 +1298,18 @@ app.controller("DetailCtrl", ['$scope', '$http', '$location', '$uibModal', '$rou
         }
         else {
           var item = angular.copy($scope.selectedResponse)
+
           $scope.recordedResponses.push(item)
+
+
+          if(angular.isDefined($scope.sequence.question)){
+            var question = angular.copy($scope.sequence.question)
+            $scope.recordedQuestions.push(question)
+          }
+          else {
+            var question = angular.copy($scope.sequence[0].question)
+            $scope.recordedQuestions.push(question)
+          }
           //console.log($scope.recordedResponses)
           //productService.increaseCount(1);
           var checkIfFinished = productService.getCount();
@@ -1294,11 +1334,12 @@ app.controller("DetailCtrl", ['$scope', '$http', '$location', '$uibModal', '$rou
       }
       else if($scope.selectedResponse != "Other") {
         $scope.recordedResponses.push($scope.selectedResponse)
+        $scope.recordedQuestions.push($scope.sequence.question)
       }
       else {
         $scope.copyArray = $scope.selectedResponseOther.split()
         $scope.recordedResponses.push($scope.copyArray)
-
+        $scope.recordedQuestions.push($scope.sequence.question)
       }
 
 
@@ -1310,7 +1351,8 @@ app.controller("DetailCtrl", ['$scope', '$http', '$location', '$uibModal', '$rou
           data: {
               language: $scope.language,
               id: $scope.appdetails.id,
-              responses: $scope.recordedResponses
+              responses: $scope.recordedResponses,
+              questions: $scope.recordedQuestions
           }
       }).then(function(response) {
           //$uibModal.dismissAll();
